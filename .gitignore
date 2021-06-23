@@ -1,5 +1,6 @@
 *.exe
 *.o
 *.out
+*.bak
 tast.cout*
 Session*.vim

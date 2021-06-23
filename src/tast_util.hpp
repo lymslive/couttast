@@ -1,6 +1,6 @@
 #ifndef TAST_UTIL_HPP__
 #define TAST_UTIL_HPP__
-
+// NOTE: too simple version v0.1, you may use higher one for larger test
 #include <cstdio>
 #include <iostream>
 
@@ -86,6 +86,7 @@ void cout(const char* strExpr, const U& valExpr, const V& valExpect)
 
 typedef void (*PFTAST)();
 
+inline
 void do_tast_fun(const char* funName, PFTAST fun)
 {
     STastState* pTast = STastState::instance();
@@ -108,6 +109,7 @@ void do_tast_fun(const char* funName, PFTAST fun)
     printf("\n");
 }
 
+inline
 int report_tast_summary()
 {
     STastState* pTast = STastState::instance();
