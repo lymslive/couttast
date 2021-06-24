@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <cmath>
 
 namespace tast
 {
@@ -457,7 +456,7 @@ void cout(const char* strExpr, const U& valExpr, const V& valExpect)
 inline
 void cout(const char* strExpr, double valExpr, double valExpect, double limit = 0.0001)
 {
-    bool bPass = (abs(valExpr - valExpect) <= limit);
+    bool bPass = (valExpr > valExpect) ? ((valExpr - valExpect) <= limit) : ((valExpect - valExpr) <= limit);
     return cout(strExpr, valExpr, valExpect, bPass);
 }
 
