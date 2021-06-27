@@ -1,5 +1,6 @@
 *.exe
 *.o
+*.so
 *.out
 *.bak
 bin

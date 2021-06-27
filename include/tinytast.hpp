@@ -43,39 +43,12 @@ void Print(const char* format, ...)
     printf("%s\n", buffer);
 }
 
-inline
-const char* pass_str(bool tf, bool eachCout = false)
-{
-    if (eachCout)
-    {
-        return tf ? "OK" : "NO";
-    }
-    return tf ? "PASS" : "FAIL";
-}
-
-inline
-std::string cout_value(bool tf)
-{
-    return tf ? "ture" : "false";
-}
-
-template <typename T>
-std::string cout_value(const T& value)
-{
-    std::stringstream oss;
-    oss << value;
-    return oss.str();
-}
-
-template <typename T>
-void cout(const char* strExpr, const T& valExpr)
-{
-    Print("|| %s =~? %s", strExpr, cout_value(valExpr).c_str());
-}
-
 class CTinyCli
 {
 protected:
+    std::map<std::string, std::string> m_mapOption;
+    std::vector<std::string> m_vecArg;
+
     void ParseCli(int argc, char** argv)
     {
         for (int i = 1; i < argc; ++i)
@@ -138,9 +111,6 @@ protected:
         }
         return ParseCli((int)argv.size(), const_cast<char**>(&argv[0]));
     }
-
-    std::map<std::string, std::string> m_mapOption;
-    std::vector<std::string> m_vecArg;
 };
 
 // raw  tast function pointer
@@ -150,29 +120,32 @@ typedef void (*PFTAST)();
 class CTastCase
 {
 public:
-    CTastCase(const std::string& desc) : m_description(desc)
-    {}
+    CTastCase(const std::string& desc) : m_description(desc) {}
     virtual ~CTastCase() {}
     virtual void run() = 0;
-    const std::string& Description()
-    {
-        return m_description;
-    }
+    const std::string& Description() const
+    { return m_description; }
 private:
     std::string m_description;
 };
 
 class CTastMgr : public Singleton<CTastMgr>, public CTinyCli
 {
-public:
-    CTastMgr()
-    {
-        m_passedCase = 0;
-        m_failedCase = 0;
-        m_currentFail = 0;
-        m_runMode = NORMAL_RUN;
-    }
+private:
+    std::map<std::string, CTastCase*> m_mapTastCase;
+    std::vector<std::string> m_listFail;
+    int m_currentFail;
+    int m_passedCase;
+    int m_failedCase;
+    bool m_coutFail;   // only cout failed statement, ignore passed statement
+    bool m_coutSilent; // not cout extra verbose information
 
+public:
+    bool CoutFail() const { return m_coutFail || m_coutSilent; }
+    bool CoutSilent() const { return m_coutSilent; }
+
+public:
+    CTastMgr() : m_currentFail(0), m_passedCase(0), m_failedCase(0), m_coutFail(false), m_coutSilent(false) {}
     ~CTastMgr()
     {
         for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
@@ -202,70 +175,62 @@ public:
         m_currentFail++;
     }
 
+    static const char* pass_case(bool tf)
+    {
+        return tf ? "PASS" : "FAIL";
+    }
+
     void PreRunTast(const std::string& name)
     {
-        Print("## run %s()", name.c_str());
         m_currentFail = 0;
+        Print("## run %s()", name.c_str());
     }
 
     void PostRunTast(const std::string& name)
     {
         if (m_currentFail == 0)
         {
-            Print("<< [%s] %s", pass_str(true), name.c_str());
             m_passedCase++;
         }
         else
         {
-            Print("<< [%s] %d IN %s", pass_str(false), m_currentFail, name.c_str());
             m_failedCase++;
             m_listFail.push_back(name);
         }
-        Print("");
+
+        if (!m_coutSilent)
+        {
+            if (m_currentFail == 0)
+            {
+                Print("<< [%s] %s", pass_case(true), name.c_str());
+            }
+            else
+            {
+                Print("<< [%s] %d @ %s", pass_case(false), m_currentFail, name.c_str());
+            }
+            Print("");
+        }
     }
 
-    int RunTast(const std::string& name, PFTAST fun)
+    void RunTast(const std::string& name, PFTAST fun)
     {
         PreRunTast(name);
         fun();
         PostRunTast(name);
-        return m_currentFail;
     }
 
-    int RunTast(const std::string& name, CTastCase* pTastCase)
+    void RunTast(const std::string& name, CTastCase* pTastCase)
     {
-        if (!pTastCase)
-        {
-            return 0;
-        }
+        if (!pTastCase) { return; }
 
-        if (m_runMode == LIST_NAME)
-        {
-            m_listTast.push_back(name);
-            return 0;
-        }
-        else if (m_runMode == LIST_WITH_DESC)
-        {
-            std::string line = name;
-            line.append(":\t").append(pTastCase->Description());
-            m_listTast.push_back(line);
-            return 0;
-        }
-        else
-        {
-            PreRunTast(name);
-            pTastCase->run();
-            PostRunTast(name);
-            return m_currentFail;
-        }
+        PreRunTast(name);
+        pTastCase->run();
+        PostRunTast(name);
     }
 
-    int RunTast(const std::string& name)
+    void RunTast(const std::string& name)
     {
-        if (name.empty())
-        {
-            return 0;
-        }
+        if (name.empty()) { return; }
 
         std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.find(name);
         if (it != m_mapTastCase.end())
@@ -302,10 +267,8 @@ public:
         }
     }
 
-    int RunTast(const std::string& arg, char filter)
+    void RunTast(const std::string& arg, char filter)
     {
-        int iCount = 0;
-
         for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
         {
             const std::string& name = it->first;
@@ -314,28 +277,20 @@ public:
                 continue;
             }
 
-            bool match = false;
-            if (filter == '%' && name.find(arg) != std::string::npos)
+            size_t pos = name.find(arg);
+            if (filter == '%' && pos != std::string::npos)
             {
-                match = true;
+                RunTast(name, it->second);
             }
-            else if (filter == '^' && name.find(arg) == 0)
+            else if (filter == '^' && pos == 0)
             {
-                match = true;
+                RunTast(name, it->second);
             }
-            else if (filter == '$' && name.find(arg) == name.size() - arg.size())
+            else if (filter == '$' && pos == name.size() - arg.size())
             {
-                match = true;
-            }
-
-            if (match)
-            {
-                ++iCount;
                 RunTast(name, it->second);
             }
         }
-
-        return iCount;
     }
 
     int RunTast()
@@ -360,62 +315,69 @@ public:
     int RunTast(int argc, char** argv)
     {
         ParseCli(argc, argv);
-        return RunTast();
-    }
-
-    void ParseCli(int argc, char** argv)
-    {
-        CTinyCli::ParseCli(argc, argv);
         if (m_mapOption.find("list") != m_mapOption.end())
         {
-            m_runMode = LIST_NAME;
+            return ListCase(false);
         }
         else if (m_mapOption.find("List") != m_mapOption.end())
         {
-            m_runMode = LIST_WITH_DESC;
+            return ListCase(true);
         }
+        else if (m_mapOption.find("help") != m_mapOption.end())
+        {
+            return ListHelp();
+        }
+        else if (m_mapOption.find("cout") != m_mapOption.end())
+        {
+            std::string& arg = m_mapOption["cout"];
+            if (arg == "fail")
+            {
+                m_coutFail = true;
+            }
+            else if (arg == "silent")
+            {
+                m_coutSilent = true;
+            }
+        }
+        return RunTast();
+    }
+
+    int ListCase(bool bWithDesc)
+    {
+        for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
+        {
+            if (bWithDesc && it->second)
+            {
+                Print("%s:\t%s", it->first.c_str(), it->second->Description().c_str());
+            }
+            else
+            {
+                Print("%s", it->first.c_str());
+            }
+        }
+        return 0;
+    }
+
+    int ListHelp()
+    {
+        Print("./tast_program [options] [tastcase ...]");
+        Print("  --list (--List): list all tastcase (also with description)");
+        Print("  --cout=[fail|silent]: print only failed statement");
+        Print("  --help: print this message");
+        return 0;
     }
 
     int Summary()
     {
-        if (!m_listTast.empty())
+        Print("## Summary");
+        Print("<< [%s] %d", pass_case(true), m_passedCase);
+        Print("<< [%s] %d", pass_case(false), m_failedCase);
+        for (size_t i = 0; i < m_listFail.size(); ++i)
         {
-            for (size_t i = 0; i < m_listTast.size(); ++i)
-            {
-                Print("%s", m_listTast[i].c_str());
-            }
-            return m_listTast.size();
+            Print("!! %s", m_listFail[i].c_str());
         }
-        else
-        {
-            Print("## Summary\n");
-            Print("<< [%s] %d", pass_str(true), m_passedCase);
-            Print("<< [%s] %d", pass_str(false), m_failedCase);
-            for (size_t i = 0; i < m_listFail.size(); ++i)
-            {
-                Print("!! %s", m_listFail[i].c_str());
-            }
-            return m_failedCase;
-        }
+        return m_failedCase;
     }
-
-    enum ERunMode
-    {
-        NORMAL_RUN = 0,
-        LIST_NAME = 1,
-        LIST_WITH_DESC = 2,
-    };
-
-private:
-    std::map<std::string, CTastCase*> m_mapTastCase;
-    // std::string m_currentCase;
-    int m_currentFail;
-    int m_passedCase;
-    int m_failedCase;
-
-    ERunMode m_runMode;
-    std::vector<std::string> m_listTast;
-    std::vector<std::string> m_listFail;
 };
 
 template <typename T>
@@ -428,37 +390,85 @@ public:
     }
 };
 
-template <typename U, typename V>
-void cout(const char* strExpr, const U& valExpr, const V& valExpect, bool bPass)
+struct SLocation
 {
-    const char* strPass = pass_str(bPass, true);
-    Print("|| %s =~? %s [%s]", strExpr, cout_value(valExpr).c_str(), strPass);
-    if (!bPass)
+    const char* file;
+    int line;
+    const char* function;
+
+    SLocation(const char* pFile, int iLine, const char* pFunction)
+        : file(pFile), line(iLine), function(pFunction)
+    {}
+};
+
+class CStatement
+{
+private:
+    SLocation m_stLocation;
+    const char* m_pExpression;
+    bool m_bCoutFailOnly;
+
+public:
+    CStatement(const SLocation& stLocation, const char* pExpression, bool bCoutFailOnly = false)
+        : m_stLocation(stLocation), m_pExpression(pExpression), m_bCoutFailOnly(bCoutFailOnly)
+    {}
+
+    static const char* pass_cout(bool tf)
     {
-        Print("!! Expect: %s", cout_value(valExpect).c_str());
-        CTastMgr::GetInstance()->AddFail();
+        return tf ? "OK" : "NO";
     }
-}
 
-template <typename U, typename V>
-bool compare_value(const U& valExpr, const V& valExpect)
-{
-    return valExpr == valExpect;
-}
+    std::string cout_value(bool tf)
+    {
+        return tf ? "ture" : "false";
+    }
 
-template <typename U, typename V>
-void cout(const char* strExpr, const U& valExpr, const V& valExpect)
-{
-    bool bPass = compare_value(valExpr, valExpect);
-    return cout(strExpr, valExpr, valExpect, bPass);
-}
+    template <typename T>
+    std::string cout_value(const T& value)
+    {
+        std::stringstream oss;
+        oss << value;
+        return oss.str();
+    }
 
-inline
-void cout(const char* strExpr, double valExpr, double valExpect, double limit = 0.0001)
-{
-    bool bPass = (valExpr > valExpect) ? ((valExpr - valExpect) <= limit) : ((valExpect - valExpr) <= limit);
-    return cout(strExpr, valExpr, valExpect, bPass);
-}
+    template <typename T>
+    bool cout(const T& valExpr)
+    {
+        if (!CTastMgr::GetInstance()->CoutSilent())
+        {
+            Print("|| %s =~? %s", m_pExpression, cout_value(valExpr).c_str());
+        }
+        return true;
+    }
+
+    template <typename U, typename V>
+    bool cout(const U& valExpr, const V& valExpect, bool bPass)
+    {
+        if (!bPass || !m_bCoutFailOnly && !CTastMgr::GetInstance()->CoutFail())
+        {
+            Print("|| %s =~? %s [%s]", m_pExpression, cout_value(valExpr).c_str(), pass_cout(bPass));
+        }
+        if (!bPass)
+        {
+            Print(">> Expect: %s", cout_value(valExpect).c_str());
+            CTastMgr::GetInstance()->AddFail();
+            Print(">> Location: [%s:%d](%s)", m_stLocation.file, m_stLocation.line, m_stLocation.function);
+        }
+        return bPass;
+    }
+
+    template <typename U, typename V>
+    bool cout(const U& valExpr, const V& valExpect)
+    {
+        return cout(valExpr, valExpect, valExpr == valExpect);
+    }
+
+    bool cout(double valExpr, double valExpect, double limit = 0.0001)
+    {
+        bool bPass = (valExpr > valExpect) ? ((valExpr - valExpect) <= limit) : ((valExpect - valExpr) <= limit);
+        return cout(valExpr, valExpect, bPass);
+    }
+};
 
 inline
 void run_tast(const char* name, PFTAST fun)
@@ -469,9 +479,13 @@ void run_tast(const char* name, PFTAST fun)
 } // end of namespace tast
 
 // satement macros used in tast case function
-#define COUT(expr, ...) tast::cout(#expr, (expr), ## __VA_ARGS__)
-#define CODE(statement) tast::Print("// %s", #statement); statement
-#define DESC(msg, ...) tast::Print("-- " msg, ## __VA_ARGS__)
+#define SRC_LOCATION tast::SLocation(__FILE__, __LINE__, __FUNCTION__)
+#define COUT(expr, ...) tast::CStatement(SRC_LOCATION, #expr).cout((expr), ## __VA_ARGS__)
+#define COUTF(expr, ...) tast::CStatement(SRC_LOCATION, #expr, true).cout((expr), ## __VA_ARGS__)
+#define COUT_ASSERT(expr, ...) if (!tast::CStatement(SRC_LOCATION, #expr).cout((expr), ## __VA_ARGS__)) return
+
+#define CODE(statement) if (!tast::CTastMgr::GetInstance()->CoutSilent()) {tast::Print("// %s", #statement);} statement
+#define DESC(msg, ...) if (!tast::CTastMgr::GetInstance()->CoutSilent()) tast::Print("-- " msg, ## __VA_ARGS__)
 
 // macro to invoke simple tast function void()
 #define TAST(fun) tast::run_tast(#fun, fun)
@@ -479,7 +493,7 @@ void run_tast(const char* name, PFTAST fun)
 
 // macro to define and run tast object
 #define RUN_TAST(...) tast::CTastMgr::GetInstance()->RunTast(__VA_ARGS__)
-#define DEF_TAST(name, desc) \
+#define DEF_TAST(name, ...) \
     class CTast_ ## name : public tast::CTastCase \
     { \
     public: \
@@ -488,7 +502,7 @@ void run_tast(const char* name, PFTAST fun)
     private: \
         static tast::CTastBuilder<CTast_ ## name> m_builder; \
     }; \
-    tast::CTastBuilder<CTast_ ## name> CTast_ ## name::m_builder(#name, desc); \
+    tast::CTastBuilder<CTast_ ## name> CTast_ ## name::m_builder(#name, ## __VA_ARGS__); \
     void CTast_ ## name::run()
 
 #endif /* end of include guard: TINYTAST_HPP__ */

@@ -1,4 +1,4 @@
-.PHONY : all dir
+.PHONY : all dir clean rebuild example
 
 TAST_LIB = lib/libtast_main.a
 TAST_BIN = bin/tast_drive
@@ -30,3 +30,13 @@ lib/libtast_main.a : build/tast_main.o
 
 bin/tast_drive : build/tast_drive.o
 	$(CXX) -o $@ $(CXXFLAGS) $^ $(LIBRARY)
+
+example:
+	make -C example/basiccpp-umain/
+	make -C example/basiccpp-uliba/
+	make -C example/basiccpp-udyso/
+
+clean:
+	rm $(TAST_LIB) $(TAST_BIN) $(OBJ_ALL)
+
+rebuild: clean all
