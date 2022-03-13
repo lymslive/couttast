@@ -1,5 +1,6 @@
 CXX = g++
 CXXFLAGS = -fPIC
+# CXXFLAGS += -Dprivate=public -Dprotected=pblic
 
 SRC_DIR = ../basiccpp
 SRC_ALL = $(wildcard $(SRC_DIR)/*.cpp)
