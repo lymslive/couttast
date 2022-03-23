@@ -1,4 +1,4 @@
-CXX = g++
+CXX ?= g++
 CXXFLAGS = -fPIC
 # CXXFLAGS += -Dprivate=public -Dprotected=pblic
 

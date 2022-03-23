@@ -1,5 +1,6 @@
 #include "tinytast.hpp"
 #include "t_sizeof.h"
+#include <string>
 
 int CStatic::value = 0;
 
@@ -149,3 +150,11 @@ DEF_TAST(sizeofE_empty_class, "空类大小")
 	COUT(sizeof(CStatic), 1);
 	COUT(sizeof(CStatic::value), 4);
 }
+
+DEF_TAST(sizeof_string, "std::string大小")
+{
+	DESC("std::string 实现可能依编译器及版本有所不同");
+	DESC("但是 -std= 标准选项应该不影响其大小");
+	COUT(sizeof(std::string));
+}
+
