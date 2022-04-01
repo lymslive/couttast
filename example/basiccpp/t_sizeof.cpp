@@ -156,5 +156,6 @@ DEF_TAST(sizeof_string, "std::string大小")
 	DESC("std::string 实现可能依编译器及版本有所不同");
 	DESC("但是 -std= 标准选项应该不影响其大小");
 	COUT(sizeof(std::string));
+	COUT(sizeof(std::string), 8);
 }
 
