@@ -1,0 +1,11 @@
+## run test_sizoef()
+|| sizeof(int) =~? 4
+|| sizeof(int) =~? 4 [OK]
+|| sizeof(int)==4 =~? ture [OK]
+-- string 大小可能依编译器版本实现而不同
+|| sizeof(std::string) =~? 32 [OK]
+<< [PASS] test_sizoef
+
+## Summary
+<< [PASS] 1
+<< [FAIL] 0
