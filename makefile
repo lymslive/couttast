@@ -35,6 +35,7 @@ example:
 	make -C example/basiccpp-umain/
 	make -C example/basiccpp-uliba/
 	make -C example/basiccpp-udyso/
+	make -C example/tastself/
 
 clean:
 	rm $(TAST_LIB) $(TAST_BIN) $(OBJ_ALL)
