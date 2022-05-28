@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <sys/time.h>
+#include <unistd.h>
 
 namespace tast
 {
@@ -237,6 +238,30 @@ public:
         PreRunTast(name);
         pTastCase->run();
         PostRunTast(name);
+    }
+
+    int64_t TimeTast(const std::string& name, int times = 10, bool verbose = true)
+    {
+        std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.find(name);
+        if (it == m_mapTastCase.end()) { return 0; }
+        Print("## time %s() with %s runs", name.c_str(), times);
+        int64_t timeTotal = 0;
+        for (int i = 0; i < times; ++i)
+        {
+            int64_t timeBegin = GetMicrosecondTime();
+            it->second->run();
+            int64_t timeEnd = GetMicrosecondTime();
+            int64_t timePass = timeEnd - timeBegin;
+            timeTotal += timePass;
+            if (!m_coutSilent && verbose)
+            {
+                Print(".. time %d: %lld us", i, timePass);
+            }
+            sleep(1);
+        }
+        int64_t timeAvg = timeTotal/times;
+        Print(".. time: %d; average %lld us; totol: %lld us", times, timeAvg, timeTotal);
+        return timeAvg;
     }
 
     void RunTast(const std::string& name)
@@ -515,5 +540,9 @@ void run_tast(const char* name, PFTAST fun)
     }; \
     tast::CTastBuilder<CTast_ ## name> CTast_ ## name::m_builder(#name, ## __VA_ARGS__); \
     void CTast_ ## name::run()
+
+// run a named tast several times and return the average elapse microsecond. 
+// 1-3 arguemnt: TIME_TAST(name, times=10, verbose=true)
+#define TIME_TAST(...) tast::CTastMgr::GetInstance()->TimeTast(__VA_ARGS__)
 
 #endif /* end of include guard: TINYTAST_HPP__ */
