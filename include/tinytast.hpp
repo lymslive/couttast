@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <sys/time.h>
 
 namespace tast
 {
@@ -28,6 +29,13 @@ private:
     Singleton(const T&);
     void operator= (const T&);
 };
+
+inline int64_t GetMicrosecondTime()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return ((int64_t) tv.tv_sec * 1000000 + tv.tv_usec);
+}
 
 const int MAX_PRINT_BUFFER = 1024;
 inline
@@ -134,6 +142,7 @@ class CTastMgr : public Singleton<CTastMgr>, public CTinyCli
 private:
     std::map<std::string, CTastCase*> m_mapTastCase;
     std::vector<std::string> m_listFail;
+    int64_t m_currentTime; // current time in microsecond
     int m_currentFail;
     int m_passedCase;
     int m_failedCase;
@@ -145,7 +154,7 @@ public:
     bool CoutSilent() const { return m_coutSilent; }
 
 public:
-    CTastMgr() : m_currentFail(0), m_passedCase(0), m_failedCase(0), m_coutFail(false), m_coutSilent(false) {}
+    CTastMgr() : m_currentTime(0), m_currentFail(0), m_passedCase(0), m_failedCase(0), m_coutFail(false), m_coutSilent(false) {}
     ~CTastMgr()
     {
         for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
@@ -184,10 +193,12 @@ public:
     {
         m_currentFail = 0;
         Print("## run %s()", name.c_str());
+        m_currentTime = GetMicrosecondTime();
     }
 
     void PostRunTast(const std::string& name)
     {
+        int64_t postTime = GetMicrosecondTime();
         if (m_currentFail == 0)
         {
             m_passedCase++;
@@ -202,11 +213,11 @@ public:
         {
             if (m_currentFail == 0)
             {
-                Print("<< [%s] %s", pass_case(true), name.c_str());
+                Print("<< [%s] %s within %lld us", pass_case(true), name.c_str(), postTime - m_currentTime);
             }
             else
             {
-                Print("<< [%s] %d @ %s", pass_case(false), m_currentFail, name.c_str());
+                Print("<< [%s] %d @ %s within %lld us", pass_case(false), m_currentFail, name.c_str(), postTime - m_currentTime);
             }
             Print("");
         }
