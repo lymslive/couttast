@@ -1,4 +1,4 @@
-.PHONY : all dir clean rebuild example
+.PHONY : all dir clean rebuild example install uninstall
 
 TAST_LIB = lib/libtast_main.a
 TAST_BIN = bin/tast_drive
@@ -25,10 +25,10 @@ OBJ_ALL = $(addprefix $(OBJ_DIR)/, $(OBJ_NODIR))
 $(OBJ_ALL): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	$(CXX) -c $(CXXFLAGS) $(INCLUDE) -o $@ $<
 
-lib/libtast_main.a : build/tast_main.o
+$(TAST_LIB) : build/tast_main.o
 	$(AR) $@ $^
 
-bin/tast_drive : build/tast_drive.o
+$(TAST_BIN) : build/tast_drive.o
 	$(CXX) -o $@ $(CXXFLAGS) $^ $(LIBRARY)
 
 example:
@@ -41,3 +41,17 @@ clean:
 	rm $(TAST_LIB) $(TAST_BIN) $(OBJ_ALL)
 
 rebuild: clean all
+
+PREFIX ?= $(HOME)
+INSTALL_INC = $(PREFIX)/include/couttast
+INSTALL_LIB = $(PREFIX)/lib
+install:
+	@mkdir -p $(INSTALL_INC)
+	cp -u include/*.hpp $(INSTALL_INC)
+	@mkdir -p $(INSTALL_LIB)
+	cp -u $(TAST_LIB) $(INSTALL_LIB)
+
+uninstall:
+	rm -rf $(INSTALL_INC)
+	rm -rf $(INSTALL_LIB)/$(notdir $(TAST_LIB))
+
