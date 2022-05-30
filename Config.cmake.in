@@ -1,0 +1,4 @@
+@PACKAGE_INIT@
+
+set(COUTTAST_INCLUDE_DIRS "${PACKAGE_PREFIX_DIR}/include")
+message(STATUS "counttast found. Headers: ${COUTTAST_INCLUDE_DIRS}")
