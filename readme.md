@@ -55,6 +55,15 @@ make example
 在本仓库主目录上提供了 `makefile` ，直接 `make` 会生成 `lib/` 与 `bin/` 子目录。
 但这不是必须的，用户可以直接只使用 `include` 的头文件。
 
+也提供了 `cmake` 构造系统，例如可如下构建与安装：
+
+```bash
+mkdir build
+cd build
+cmake ..
+make install
+```
+
 有三种方法构建可执行测试程序（命令行程序），可参见 `example/basiccpp-*` 的几个子目录。
 
 1. 自己写 `main` 函数。可以在调用 `RUN_TAST` 之前作些特殊的预处理。
