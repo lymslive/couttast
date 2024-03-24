@@ -5,7 +5,7 @@ int main(int argc, char** argv)
     return RUN_TAST(argc, argv);
 }
 
-DEF_TAST(test_sizoef, "测试类型大小")
+DEF_TAST(test_name, "测试用例说明")
 {
     COUT(sizeof(int));
     COUT(sizeof(int), 4);

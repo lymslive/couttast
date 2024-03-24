@@ -43,13 +43,21 @@ write_basic_package_version_file(
 )
 
 # install
-set(CMAKE_INSTALL_PREFIX ${HOME})
+
+# to install $HOME use:
+# cmake .. -DCMAKE_INSTALL_PREFIX=$HOME
+message("would install to: ${CMAKE_INSTALL_PREFIX}")
+
 install(FILES ${HPP_HEADER}
     DESTINATION "include/couttast"
 )
 
 install(TARGETS tast_main
     DESTINATION "lib"
+)
+
+install(TARGETS tast_drive
+    DESTINATION "bin"
 )
 
 install(FILES

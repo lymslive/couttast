@@ -21,6 +21,10 @@ add_library(tast-basiccpp SHARED
     basiccpp-udyso/tast_main.cpp
 )
 
+add_executable(simplest.exe
+    simplest/main.cpp
+)
+
 add_executable(tastself.exe
     #tastself/main.cpp
     tastself/t_logprint.cpp
