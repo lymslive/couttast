@@ -5,26 +5,77 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(couttast_VERSION_MAJOR "0")
-set(couttast_VERSION_MINOR "2")
+set(couttast_VERSION_MINOR "6")
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
-add_library(tast_main src/tast_main.cpp)
+#include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+# libtinytast.a only has a (week) main function.
+add_library(tinytast STATIC src/tinytast.cpp)
+
+# libcouttast.a
+# Has many extended features as well as a (week) main function.
+add_library(couttast STATIC
+    src/couttast.cpp
+    src/agent.cpp
+    src/colour.cpp
+    src/filter.cpp
+    src/format.cpp
+    src/parallel.cpp
+    src/tinyini.cpp
+    #src/tast_drive.cpp
+    #src/tinytast.cpp
+)
+
+# A simple program to run dynamic library compileed from client unittest.
 add_executable(tast_drive src/tast_drive.cpp)
 target_link_libraries(tast_drive
     PRIVATE dl
 )
 
-option(BUILD_EXAMPLE "build example" ON)
+# An unittest program to test libcouttast.a itself.
+add_executable(utCoutTast
+    utest/test-agent.cpp
+    utest/test-exception.cpp
+    utest/test-filter.cpp
+    utest/test-format.cpp
+    utest/test-parallel.cpp
+    utest/test-tinyini.cpp
+    utest/test-tinytast.cpp
+)
 
+target_link_libraries(utCoutTast
+    PRIVATE couttast
+)
+
+# enable ctest, make test
+enable_testing()
+add_test(NAME utCoutTast
+    COMMAND utCoutTast
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/utest
+)
+
+option(BUILD_EXAMPLE "build example" ON)
 if(BUILD_EXAMPLE)
-    enable_testing()
     add_subdirectory(example)
 endif()
 
-set(HPP_HEADER
+# Only install this necessary header files to include/couttast
+set(COUTTAST_HEADER
+    include/couttast.h
     include/tinytast.hpp
+    include/tinymain.hpp
+    include/coutstd.hpp
+    include/extra-macros.hpp
+    include/gtest-macros.hpp
     include/logprint.hpp
+    include/tast_util.hpp
+    #include/agent.h
+    #include/colour.h
+    #include/filter.h
+    #include/format.h
+    #include/parallel.h
+    #include/tinyini.h
 )
 
 # package config
@@ -48,11 +99,15 @@ write_basic_package_version_file(
 # cmake .. -DCMAKE_INSTALL_PREFIX=$HOME
 message("would install to: ${CMAKE_INSTALL_PREFIX}")
 
-install(FILES ${HPP_HEADER}
+install(FILES ${COUTTAST_HEADER}
     DESTINATION "include/couttast"
 )
 
-install(TARGETS tast_main
+install(TARGETS tinytast
+    DESTINATION "lib"
+)
+
+install(TARGETS couttast
     DESTINATION "lib"
 )
 

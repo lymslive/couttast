@@ -4,14 +4,14 @@ set(BASIC_CPP_SRC
     basiccpp/t_sizeof.cpp
 )
 
-add_executable(tast-basiccpp1.exe
+add_executable(tast-basiccpp-uliba.exe
     ${BASIC_CPP_SRC}
 )
-target_link_libraries(tast-basiccpp1.exe
-    PRIVATE tast_main
+target_link_libraries(tast-basiccpp-uliba.exe
+    PRIVATE tinytast
 )
 
-add_executable(tast-basiccpp2.exe
+add_executable(tast-basiccpp-umain.exe
     ${BASIC_CPP_SRC}
     basiccpp-umain/main.cpp
 )
@@ -32,7 +32,7 @@ add_executable(tastself.exe
 )
 
 target_link_libraries(tastself.exe
-    PRIVATE tast_main
+    PRIVATE tinytast
 )
 
 add_test(NAME taseself COMMAND tastself.exe)

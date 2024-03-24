@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 `DEF_TAST` 定义用例及 `RUN_TAST` 运行用例。只支持 `TAST` 调用普通 `void()` 函
 数。
 
-## 构建指引
+## 构建指引及示例
 
 只用头文件的话，其实不需要特别地构建。但本仓库也提供了一些可运行示例及浅封装库，
 可用 `make` 简单构建，除了 C++ 标准库没有其他第三库依赖。
@@ -75,8 +75,8 @@ mkdir build
 cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=$HOME
 make
-make test
-make install
+# make test
+# make install
 ```
 
 用 `cmake` 工具时，按惯例构建工作在单独的 `build/` 子目录下进行。最后一步安装
@@ -93,13 +93,21 @@ make install
 有三种方法构建可执行测试程序（命令行程序），可参见 `example/basiccpp-*` 的几个子目录。
 
 1. 自己写 `main` 函数。可以在调用 `RUN_TAST` 之前作些特殊的预处理。
-2. 链接静态库 `lib/libtast_main.a` ，自己不用写 `main` 函数，只关注写测试用例。
-   `libtast_main.a` 的功能相当简单，就只为提供个 `main` 入口函数。
+2. 链接静态库 `libtinytast.a` 或 `libcouttast.a`，自己不用写 `main` 函数，
+   只关注写测试用例。`libtinytast.a` 的功能相当简单，就只为提供个 `main` 入口函数。
+   链接 `libcouttast.a` 库即可使用扩展功能。
 3. 自己将测试用例编译为动态链接库，要求导出 `tast_main()` 函数，该函数一般会最
    终调用 `RUN_TAST` 宏。然后用 `bin/tast_drive` 程序驱动编译的测试动态库，
    将动态库作为第一个命令行参数，剩余参数会传给内部的测试库。
 
-单元测试驱动单元测试动态链接库的使用方式如下：
+在 `example/` 目录下的 `basiccpp-umain/` 子目录演示了第一种构建法，
+`basiccpp-liba/` 子目录演示了第二种构建法，`basiccpp-udyso/` 演示了第三种构建
+法。其中涉及的单元测试用例，都引用 `basiccpp/` 子目录的源文件，所以是相同的单
+元测试用例用不同的方法构建测试程序。注意这套单元测试用例有意设置几个失败，以演
+示失败时的输出样式，且其中涉及许多 `sizeof` 运算符，在不同机器上运行可能有不同
+输出。
+
+按第三种方法，即单元测试驱动单元测试动态链接库的使用方式如下：
 
 ```bash
 bin/tast_drive libmytast.so --list
@@ -107,10 +115,19 @@ bin/tast_drive libmytast.so [test_name_fileter]
 ```
 
 注意加载动态库可能要导出环境变量 `$LD_LIBRARY_PATH`，毕竟一般不会将测试动态库
-放到系统路径中。因为动态链接库的方式比较复杂，也更多陷阱，在没特殊需求时，建议
-使用前两种方法构建独立可运行的单元测试程序。
+放到系统路径中。不过若用 cmake 构建时，在 `build/` 目录下执行 `./tast_dirve`
+可不必添加环境变量 `$LD_LIBRARY_PATH` ，可直接执行：
 
-本测试库所支持的命令行参数见后文。
+```bash
+./tast_drive example/libtast-basiccpp.so 
+example/tast-basiccpp-uliba.exe
+example/tast-basiccpp-umain.exe
+```
+
+这些构建出来的单元测试程序支持的一些命令行参数，详见后文。
+
+此外，因为动态链接库的方式比较复杂，也更多陷阱，在没特殊需求时，建议使用前两种
+方法构建独立可运行的单元测试程序。
 
 ## 单元测试库宏定义详解
 
@@ -258,6 +275,19 @@ diff tast.cout tast.bout
 
 但是可以利用 `TIME_TAST` 的返回值，比较两个算法实现的相对大小，也就能期望预测
 一种算法比另一种更快。
+
+## 开发与贡献指引
+
+开源库，例行欢迎 issue fork pr ，如果觉得此库对您有用的话。
+
+建议使用 cmake 构建，在 `build/` 目录下执行 `cmake .. && make` 后，请执行
+`make test` 确保测试通过。主要是 `utCoutTast` 要通过，它从 `utest/` 子目录的源
+文件构建，但在运行时需要读一些测试也在 `utest/` 目录下，所以想手动执行它时要先
+切换到该目录，然后如下运行：
+
+```bash
+../build/utCoutTast [--help | --list | 用例名参数]
+```
 
 ## 历史版本及主要变更记录
 

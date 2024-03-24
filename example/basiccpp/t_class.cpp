@@ -1,5 +1,9 @@
 #include "t_class.h"
 
+// CODE macro had been deprecated and deleted in tinytast.hpp
+// So add here back only for example.
+#define CODE(statement) printf("// %s\n", #statement); statement
+
 DEF_TAST(class1_ctor, "对象构造顺序")
 {
     // CODE 宏在执行语句前打印将要执行的语句

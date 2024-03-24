@@ -22,8 +22,8 @@ DEF_TAST(sizeofA_primary, "基础类型大小")
 	COUT(sizeof(char), 1);
 	COUT(sizeof(short), 2);
 	COUTF(sizeof(int), 4);
-	COUTF(sizeof(long));
-	COUTF(sizeof(long long));
+	COUTF(sizeof(long), 8);
+	COUTF(sizeof(long long), 8);
 
 	DESC("浮点数大小");
 	COUT(sizeof(float), 4);

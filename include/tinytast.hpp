@@ -1,35 +1,24 @@
+// A very tiny unit test framework with single header even in C++98
+// lymslive @ 2023-06-17
 #ifndef TINYTAST_HPP__
 #define TINYTAST_HPP__
 
-#include <stdio.h>
-#include <stdarg.h>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 #include <map>
+
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <string.h>
 
 namespace tast
 {
-
-template<typename T>
-class Singleton
-{
-public:
-    static T* GetInstance()
-    {
-        static T instance;
-        return &instance;
-    }
-
-protected:
-    Singleton() {}
-private:
-    Singleton(const T&);
-    void operator= (const T&);
-};
 
 inline int64_t GetMicrosecondTime()
 {
@@ -38,23 +27,9 @@ inline int64_t GetMicrosecondTime()
     return ((int64_t) tv.tv_sec * 1000000 + tv.tv_usec);
 }
 
-const int MAX_PRINT_BUFFER = 1024;
-inline
-void Print(const char* format, ...)
+/// A min command line parser, only support `--option[=val]` except arguments
+struct CTinyCli
 {
-    static char buffer[MAX_PRINT_BUFFER] = {0};
-
-    va_list vlist;
-    va_start(vlist, format);
-    vsnprintf(buffer, sizeof(buffer), format, vlist);
-    va_end(vlist);
-
-    printf("%s\n", buffer);
-}
-
-class CTinyCli
-{
-protected:
     std::map<std::string, std::string> m_mapOption;
     std::vector<std::string> m_vecArg;
 
@@ -85,18 +60,18 @@ protected:
                 }
             }
 
-            if (v && *v != '\0')
+            if (v != NULL) // && *v != '\0', accept empty val
             {
-                // key=val --key==val
+                // key=val --key=val --key=
                 std::string val = v;
                 std::string key(k, v-1);
                 m_mapOption[key] = val;
             }
             else if (k != argv[i] && *k != '\0')
             {
-                // --key
+                // --key, save it's val as --
                 std::string key(k);
-                m_mapOption[key] = "1";
+                m_mapOption[key] = std::string(int(k - argv[i]), '-');
             }
             else
             {
@@ -105,57 +80,89 @@ protected:
             }
         }
     }
+};
 
-    void ParseCli(const std::vector<std::string>& args)
+const int MAX_PRINT_BUFFER = 1024;
+
+// control output when run tast
+const int COUT_BIT_COUT = 1;      //< output non-compare statement
+const int COUT_BIT_PASS = 1 << 1; //< output passed statement
+const int COUT_BIT_FAIL = 1 << 2; //< output failed statement
+const int COUT_BIT_DESC = 1 << 3; //< output DESC macro for context line
+const int COUT_BIT_LINE = 1 << 4; //< output an empty line after each test case
+const int COUT_BIT_HEAD = 1 << 5; //< output head line for a test case
+const int COUT_BIT_FOOT = 1 << 6; //< output foot line for a test case
+const int COUT_BIT_LAST = 1 << 7; //< output summay after all test case
+
+// alias for common maks with conbination of cout bits
+const int COUT_MASK_NONE = 0;
+const int COUT_MASK_ALL = 0xFFFF;
+const int COUT_MASK_FAIL = COUT_MASK_ALL & (~COUT_BIT_PASS);
+const int COUT_MASK_SILENT = COUT_BIT_FAIL | COUT_BIT_FOOT | COUT_BIT_LAST;
+
+struct CTastMgr; // forward declaration
+
+/// Abstract base class for a test case.
+struct CTastCase
+{
+    CTastMgr* w_pTastMgr;      //< the owner `CTastMgr` object.
+    std::string m_description; //< one line description for test case.
+    std::string m_file;        //< file name where defined the test case.
+    int m_line;                //< line number within file where defined.
+    bool m_autoRun;            //< can auto run without cli argument.
+
+    CTastCase(CTastMgr* pTastMgr, const std::string& desc, const std::string& file, int line, bool autoRun = true)
+        : w_pTastMgr(pTastMgr), m_description(desc), m_file(file), m_line(line), m_autoRun(autoRun) {}
+    virtual ~CTastCase() {}
+    virtual void run() = 0;
+
+    std::string List(const std::string& prefix, bool full = false)
     {
-        if (args.empty())
+        std::string line(prefix);
+        if (!full)
         {
-            return;
+            line.append(m_autoRun ? "" : "*");
         }
-        std::vector<const char*> argv;
-        argv.push_back(""); // argv[0] as program name
-        for (size_t i = 0; i < args.size(); ++i)
+        else
         {
-            argv.push_back(const_cast<char*>(args[i].c_str()));
+            char lineno[16] = {0};
+            snprintf(lineno, sizeof(lineno), "%d", m_line);
+            line.append("\t").append(m_autoRun ? "TAST": "TOOL")
+                .append("\t").append(m_file).append("\t").append(lineno)
+                .append("\t").append(m_description);
         }
-        return ParseCli((int)argv.size(), const_cast<char**>(&argv[0]));
+        return line;
     }
 };
 
-// raw  tast function pointer
-typedef void (*PFTAST)();
-
-// tast class
-class CTastCase
+/// Manage the collection of test cases.
+class CTastMgr : public CTinyCli
 {
-public:
-    CTastCase(const std::string& desc) : m_description(desc) {}
-    virtual ~CTastCase() {}
-    virtual void run() = 0;
-    const std::string& Description() const
-    { return m_description; }
-private:
-    std::string m_description;
-};
+    std::map<std::string, CTastCase*> m_mapTastCase; // all test case by name
+    std::vector<std::string> m_listFail; //< failed test case name
+    int64_t m_beginTime; //< case begin time in microsecond
+    int64_t m_endTime;   //< case end time in microsecond
+    int m_currentFail;   //< count of failed statement in current test case
+    int m_passedCase;    //< count of passed test case
+    int m_failedCase;    //< count of failed test case
+    int m_coutMask;      //< bit mask to control output
 
-class CTastMgr : public Singleton<CTastMgr>, public CTinyCli
-{
-private:
-    std::map<std::string, CTastCase*> m_mapTastCase;
-    std::vector<std::string> m_listFail;
-    int64_t m_currentTime; // current time in microsecond
-    int m_currentFail;
-    int m_passedCase;
-    int m_failedCase;
-    bool m_coutFail;   // only cout failed statement, ignore passed statement
-    bool m_coutSilent; // not cout extra verbose information
+    typedef void (*PrintFun)(const char* str);
+    PrintFun m_fnPrint;  //< custome print function for output
 
-public:
-    bool CoutFail() const { return m_coutFail || m_coutSilent; }
-    bool CoutSilent() const { return m_coutSilent; }
+    friend class CStatement;
+public: // constructor
+    static CTastMgr* GetInstance()
+    {
+        static CTastMgr instance;
+        return &instance;
+    }
 
-public:
-    CTastMgr() : m_currentTime(0), m_currentFail(0), m_passedCase(0), m_failedCase(0), m_coutFail(false), m_coutSilent(false) {}
+    CTastMgr() : m_beginTime(0), m_endTime(0),
+        m_currentFail(0), m_passedCase(0), m_failedCase(0),
+        m_coutMask(COUT_MASK_ALL), m_fnPrint(NULL)
+    {}
+
     ~CTastMgr()
     {
         for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
@@ -167,6 +174,56 @@ public:
             }
         }
     }
+
+    const std::map<std::string, CTastCase*>& GetTastCase() const
+    { return m_mapTastCase; }
+
+public: // output
+    void CoutEnable (int bit) { m_coutMask = m_coutMask | bit; }
+    void CoutDisable (int bit) { m_coutMask = m_coutMask & (~bit); }
+    bool CoutMask(int bit) const { return (m_coutMask & bit) != 0; }
+    void SetCoutMask(int bit) { m_coutMask = bit; }
+    void SetCoutMask(const std::string& mask)
+    {
+        if (mask == "fail")
+        {
+            m_coutMask = COUT_MASK_FAIL;
+        }
+        else if (mask == "silent")
+        {
+            m_coutMask = COUT_MASK_SILENT;
+        }
+        else if (mask == "none")
+        {
+            m_coutMask = COUT_MASK_NONE;
+        }
+    }
+
+    void SetPrint(PrintFun fn) { m_fnPrint = fn; }
+    void Print(const char* str) const
+    {
+        if (m_fnPrint != NULL)
+        {
+            m_fnPrint(str);
+        }
+        else
+        {
+            printf("%s\n", str);
+        }
+    }
+
+    void Print(int bit, const char* format, ...) const
+    {
+        if (bit != 0 && !CoutMask(bit)) { return; }
+        static char buffer[MAX_PRINT_BUFFER] = {0};
+        va_list vlist;
+        va_start(vlist, format);
+        vsnprintf(buffer, sizeof(buffer), format, vlist);
+        va_end(vlist);
+        return Print(buffer);
+    }
+
+public: // how to run tast
 
     void AddTast(const std::string& name, CTastCase* instance)
     {
@@ -180,26 +237,36 @@ public:
         }
     }
 
-    void AddFail()
-    {
-        m_currentFail++;
-    }
-
     static const char* pass_case(bool tf)
     {
         return tf ? "PASS" : "FAIL";
     }
 
+    void SetBeginTime()
+    {
+        m_beginTime = GetMicrosecondTime();
+        m_endTime = 0;
+    }
+    int64_t SetEndTime()
+    {
+        if (m_endTime <= 0)
+        {
+            m_endTime = GetMicrosecondTime();
+        }
+        return m_endTime - m_beginTime;
+    }
+
     void PreRunTast(const std::string& name)
     {
         m_currentFail = 0;
-        Print("## run %s()", name.c_str());
-        m_currentTime = GetMicrosecondTime();
+        Print(COUT_BIT_HEAD, "## run %s()", name.c_str());
+        SetBeginTime();
     }
 
     void PostRunTast(const std::string& name)
     {
-        int64_t postTime = GetMicrosecondTime();
+        int64_t passTime = SetEndTime();
+
         if (m_currentFail == 0)
         {
             m_passedCase++;
@@ -210,60 +277,73 @@ public:
             m_listFail.push_back(name);
         }
 
-        if (!m_coutSilent)
-        {
-            if (m_currentFail == 0)
-            {
-                Print("<< [%s] %s within %lld us", pass_case(true), name.c_str(), postTime - m_currentTime);
-            }
-            else
-            {
-                Print("<< [%s] %d @ %s within %lld us", pass_case(false), m_currentFail, name.c_str(), postTime - m_currentTime);
-            }
-            Print("");
-        }
+        Print(COUT_BIT_FOOT, "<< [%s] %d %s %lld us", pass_case(m_currentFail == 0), m_currentFail, name.c_str(), passTime);
+        Print(COUT_BIT_LINE, "");
     }
 
-    void RunTast(const std::string& name, PFTAST fun)
+    int Summary() const
     {
-        PreRunTast(name);
-        fun();
-        PostRunTast(name);
+        Print(COUT_BIT_LAST, "## Summary\n<< [%s] %d\n<< [%s] %d", pass_case(true), m_passedCase, pass_case(false), m_failedCase);
+        for (size_t i = 0; i < m_listFail.size(); ++i)
+        {
+            Print(COUT_BIT_LAST, "!! %s", m_listFail[i].c_str());
+        }
+        return m_failedCase;
     }
 
-    void RunTast(const std::string& name, CTastCase* pTastCase)
+    // run a tast case with name.
+    void RunTast(const std::string& name, CTastCase* pTastCase, bool bOnlyAuto = false)
     {
         if (!pTastCase) { return; }
+        if (bOnlyAuto && !pTastCase->m_autoRun) { return; }
 
         PreRunTast(name);
         pTastCase->run();
         PostRunTast(name);
     }
 
-    int64_t TimeTast(const std::string& name, int times = 10, bool verbose = true)
+    int64_t TimeTast(const std::string& name, int times = 10, int msleep = 1000)
     {
         std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.find(name);
         if (it == m_mapTastCase.end()) { return 0; }
-        Print("## time %s() with %s runs", name.c_str(), times);
+        Print(COUT_BIT_HEAD, "## time %s() with %d runs", name.c_str(), times);
+        int64_t beginTimeSave = m_beginTime;
+        int64_t endTimeSave = m_endTime;
         int64_t timeTotal = 0;
         for (int i = 0; i < times; ++i)
         {
-            int64_t timeBegin = GetMicrosecondTime();
+            SetBeginTime();
             it->second->run();
-            int64_t timeEnd = GetMicrosecondTime();
-            int64_t timePass = timeEnd - timeBegin;
-            timeTotal += timePass;
-            if (!m_coutSilent && verbose)
+            int64_t passTime = SetEndTime();
+            timeTotal += passTime;
+            if (msleep > 0)
             {
-                Print(".. time %d: %lld us", i, timePass);
+                Print(COUT_BIT_HEAD, ".. time %d: %lld us", i, passTime);
+                ::usleep(msleep * 1000);
             }
-            sleep(1);
         }
-        int64_t timeAvg = timeTotal/times;
-        Print(".. time: %d; average %lld us; totol: %lld us", times, timeAvg, timeTotal);
+        m_beginTime = beginTimeSave;
+        m_endTime = endTimeSave;
+        int64_t timeAvg = times > 0 ? timeTotal/times : 0;
+        Print(COUT_BIT_FOOT, ".. time: %d; average %lld us; totol: %lld us", times, timeAvg, timeTotal);
         return timeAvg;
     }
 
+public: // what tast to run
+
+    // run test cases defined in `file` after `line`.
+    void RunTast(const std::string& file, int line)
+    {
+        for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
+        {
+            if (it->second != NULL && it->second->m_file.find(file) != std::string::npos && it->second->m_line >= line)
+            {
+                RunTast(it->first, it->second);
+            }
+        }
+    }
+
+    // find tast by name to run, may with wild char [^$*], or `file.cpp:line` form.
     void RunTast(const std::string& name)
     {
         if (name.empty()) { return; }
@@ -273,64 +353,42 @@ public:
         {
             return RunTast(name, it->second);
         }
-        else if (name.size() == 1)
-        {
-            return RunTast(name, '^');
-        }
         else
         {
-            size_t iend = name.size() - 1;
-            if (name[0] == '^')
+            size_t idot = name.rfind(".cpp");
+            if (idot != std::string::npos)
             {
-                return RunTast(name.substr(1), '^');
+                std::string file = name.substr(0, idot + 4);
+                int line = 0;
+                size_t icolon = name.rfind(":");
+                if (icolon != std::string::npos)
+                {
+                    line = atoi(name.c_str() + icolon + 1);
+                }
+                return RunTast(file, line);
             }
-            else if (name[iend] == '*')
+
+            for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
             {
-                return RunTast(name.substr(0, iend), '^');
-            }
-            else if (name[iend] == '$')
-            {
-                return RunTast(name.substr(0, iend), '$');
-            }
-            else if (name[0] == '*')
-            {
-                return RunTast(name.substr(1), '$');
-            }
-            else
-            {
-                return RunTast(name, '%');
+                if (it->first.find(name) != std::string::npos)
+                {
+                    RunTast(it->first, it->second);
+                }
             }
         }
     }
 
-    void RunTast(const std::string& arg, char filter)
-    {
-        for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
-        {
-            const std::string& name = it->first;
-            if (arg.size() > name.size())
-            {
-                continue;
-            }
-
-            size_t pos = name.find(arg);
-            if (filter == '%' && pos != std::string::npos)
-            {
-                RunTast(name, it->second);
-            }
-            else if (filter == '^' && pos == 0)
-            {
-                RunTast(name, it->second);
-            }
-            else if (filter == '$' && pos == name.size() - arg.size())
-            {
-                RunTast(name, it->second);
-            }
-        }
-    }
-
+    // select tast to run after parsed cli arguments.
     int RunTast()
     {
+        for (std::map<std::string, std::string>::iterator it = m_mapOption.begin(); it != m_mapOption.end(); ++it)
+        {
+            if (it->first == "help") return ListHelp();
+            if (it->first == "list") return ListCase(false);
+            if (it->first == "List") return ListCase(true);
+            if (it->first == "cout") { SetCoutMask(it->second); }
+        }
+
         if (!m_vecArg.empty())
         {
             for (size_t i = 0; i < m_vecArg.size(); ++i)
@@ -342,112 +400,82 @@ public:
         {
             for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
             {
-                RunTast(it->first, it->second);
+                RunTast(it->first, it->second, true);
             }
         }
         return Summary();
     }
 
+    // run tast with argc and argv from main function.
     int RunTast(int argc, char** argv)
     {
         ParseCli(argc, argv);
-        if (m_mapOption.find("list") != m_mapOption.end())
-        {
-            return ListCase(false);
-        }
-        else if (m_mapOption.find("List") != m_mapOption.end())
-        {
-            return ListCase(true);
-        }
-        else if (m_mapOption.find("help") != m_mapOption.end())
-        {
-            return ListHelp();
-        }
-        else if (m_mapOption.find("cout") != m_mapOption.end())
-        {
-            std::string& arg = m_mapOption["cout"];
-            if (arg == "fail")
-            {
-                m_coutFail = true;
-            }
-            else if (arg == "silent")
-            {
-                m_coutSilent = true;
-            }
-        }
         return RunTast();
     }
 
-    int ListCase(bool bWithDesc)
+public: // overview tast
+    int ListCase(bool bTable) // no const as below c++11 there in no cbegin()
     {
-        for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
+        for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end() && it->second != NULL; ++it)
         {
-            if (bWithDesc && it->second)
-            {
-                Print("%s:\t%s", it->first.c_str(), it->second->Description().c_str());
-            }
-            else
-            {
-                Print("%s", it->first.c_str());
-            }
+            Print(it->second->List(it->first, bTable).c_str());
         }
         return 0;
     }
 
-    int ListHelp()
+    int ListHelp() // const
     {
-        Print("./tast_program [options] [tastcase ...]");
-        Print("  --list (--List): list all tastcase (also with description)");
-        Print("  --cout=[fail|silent]: print only failed statement");
+        Print("./tast_program [options] [testcase ...]");
+        Print("  --list (--List): list all test cases (also with description)");
+        Print("  --cout=[fail|silent|none]: control less print output");
         Print("  --help: print this message");
         return 0;
     }
-
-    int Summary()
-    {
-        Print("## Summary");
-        Print("<< [%s] %d", pass_case(true), m_passedCase);
-        Print("<< [%s] %d", pass_case(false), m_failedCase);
-        for (size_t i = 0; i < m_listFail.size(); ++i)
-        {
-            Print("!! %s", m_listFail[i].c_str());
-        }
-        return m_failedCase;
-    }
 };
 
+/// Build a concrete test case instance.
 template <typename T>
-class CTastBuilder
+struct CTastBuilder
 {
-public:
-    CTastBuilder(const std::string& name, const std::string& desc = "")
+    CTastBuilder(CTastMgr* pTastMgr, const std::string& name, const char* file, int line, bool autoRun, const std::string& desc = "")
     {
-        CTastMgr::GetInstance()->AddTast(name, new T(desc));
+        const char* slash = strrchr(file, '/');
+        file = slash ? slash + 1 : file;
+        CTastMgr::GetInstance()->AddTast(name, new T(pTastMgr, desc, file, line, autoRun));
     }
 };
 
-struct SLocation
+/// The source location of a statement.
+struct CLocation
 {
-    const char* file;
-    int line;
-    const char* function;
+    const char* function; //< from __FUNCTION__
+    const char* file;     //< from __FILE__
+    int line;             //< from __LINE__
 
-    SLocation(const char* pFile, int iLine, const char* pFunction)
+    CLocation(const char* pFile, int iLine, const char* pFunction)
         : file(pFile), line(iLine), function(pFunction)
     {}
 };
 
-class CStatement
+/// Denote a COUT statement or like.
+struct CStatement
 {
-private:
-    SLocation m_stLocation;
-    const char* m_pExpression;
-    bool m_bCoutFailOnly;
+    CLocation m_stLocation;    //< source location of this statement.
+    const char* w_pExpression; //< the expression in literal string.
+    CTastMgr* w_pTastMgr;      //< refer to the manager of test.
+    bool m_bCoutFailOnly;      //< only output when fail for COUTF.
 
-public:
-    CStatement(const SLocation& stLocation, const char* pExpression, bool bCoutFailOnly = false)
-        : m_stLocation(stLocation), m_pExpression(pExpression), m_bCoutFailOnly(bCoutFailOnly)
-    {}
+    CStatement(const CLocation& stLocation, const char* pExpression, bool bCoutFailOnly = false)
+        : m_stLocation(stLocation), w_pExpression(pExpression), m_bCoutFailOnly(bCoutFailOnly)
+    {
+        w_pTastMgr = CTastMgr::GetInstance();
+    }
+
+    CStatement& SetTastMgr(CTastMgr& stTastMgr)
+    {
+        w_pTastMgr = &stTastMgr;
+        return *this;
+    }
 
     static const char* pass_cout(bool tf)
     {
@@ -470,25 +498,30 @@ public:
     template <typename T>
     bool cout(const T& valExpr)
     {
-        if (!CTastMgr::GetInstance()->CoutSilent())
-        {
-            Print("|| %s =~? %s", m_pExpression, cout_value(valExpr).c_str());
-        }
+        w_pTastMgr->Print(COUT_BIT_COUT, "|| %s =~? %s", w_pExpression, cout_value(valExpr).c_str());
         return true;
     }
 
     template <typename U, typename V>
-    bool cout(const U& valExpr, const V& valExpect, bool bPass)
+    bool cout(const U& valExpr, const V& valExpect, bool bPass, const char* pExpression = NULL)
     {
-        if (!bPass || !m_bCoutFailOnly && !CTastMgr::GetInstance()->CoutFail())
+        if (pExpression != NULL)
         {
-            Print("|| %s =~? %s [%s]", m_pExpression, cout_value(valExpr).c_str(), pass_cout(bPass));
+            w_pExpression = pExpression;
         }
         if (!bPass)
         {
-            Print(">> Expect: %s", cout_value(valExpect).c_str());
-            CTastMgr::GetInstance()->AddFail();
-            Print(">> Location: [%s:%d](%s)", m_stLocation.file, m_stLocation.line, m_stLocation.function);
+            w_pTastMgr->m_currentFail++;
+        }
+        if (bPass && !m_bCoutFailOnly)
+        {
+            w_pTastMgr->Print(COUT_BIT_PASS, "|| %s =~? %s [%s]", w_pExpression, cout_value(valExpr).c_str(), pass_cout(bPass));
+        }
+        else if (!bPass)
+        {
+            w_pTastMgr->Print(COUT_BIT_FAIL, "|| %s =~? %s [%s]", w_pExpression, cout_value(valExpr).c_str(), pass_cout(bPass));
+            w_pTastMgr->Print(COUT_BIT_FAIL, ">> Expect: %s", cout_value(valExpect).c_str());
+            w_pTastMgr->Print(COUT_BIT_FAIL, ">> Location: [%s:%d](%s)", m_stLocation.file, m_stLocation.line, m_stLocation.function);
         }
         return bPass;
     }
@@ -504,45 +537,72 @@ public:
         bool bPass = (valExpr > valExpect) ? ((valExpr - valExpect) <= limit) : ((valExpect - valExpr) <= limit);
         return cout(valExpr, valExpect, bPass);
     }
-};
 
-inline
-void run_tast(const char* name, PFTAST fun)
-{
-    CTastMgr::GetInstance()->RunTast(name, fun);
-}
+    void cout_error(int count)
+    {
+        if (cout(w_pTastMgr->m_currentFail, count))
+        {
+            w_pTastMgr->m_currentFail = 0;
+        }
+    }
+};
 
 } // end of namespace tast
 
-// satement macros used in tast case function
-#define SRC_LOCATION tast::SLocation(__FILE__, __LINE__, __FUNCTION__)
-#define COUT(expr, ...) tast::CStatement(SRC_LOCATION, #expr).cout((expr), ## __VA_ARGS__)
-#define COUTF(expr, ...) tast::CStatement(SRC_LOCATION, #expr, true).cout((expr), ## __VA_ARGS__)
-#define COUT_ASSERT(expr, ...) if (!tast::CStatement(SRC_LOCATION, #expr).cout((expr), ## __VA_ARGS__)) return
+/// The global tast manager instance object.
+#define G_TASTMGR tast::CTastMgr::GetInstance()
 
-#define CODE(statement) if (!tast::CTastMgr::GetInstance()->CoutSilent()) {tast::Print("// %s", #statement);} statement
-#define DESC(msg, ...) if (!tast::CTastMgr::GetInstance()->CoutSilent()) tast::Print("-- " msg, ## __VA_ARGS__)
+/// Run all auto tests or those specified in cli argument.
+#define RUN_TAST(...) G_TASTMGR->RunTast(__VA_ARGS__)
 
-// macro to invoke simple tast function void()
-#define TAST(fun) tast::run_tast(#fun, fun)
-#define TAST_RESULT tast::CTastMgr::GetInstance()->Summary()
-
-// macro to define and run tast object
-#define RUN_TAST(...) tast::CTastMgr::GetInstance()->RunTast(__VA_ARGS__)
-#define DEF_TAST(name, ...) \
+/// Define test case, with static builder adding to global manager before main.
+/// The following code bock is the body virtual function `run()`.
+#define DEF_TAST_IMPL(name, autoRun, ...) \
     class CTast_ ## name : public tast::CTastCase \
     { \
     public: \
-        CTast_ ## name(const std::string& strDesc) : tast::CTastCase(strDesc) {} \
+        CTast_ ## name(tast::CTastMgr* pTastMgr, const std::string& desc, const std::string& file, int line, bool autoArg) : tast::CTastCase(pTastMgr, desc, file, line, autoArg) {} \
         virtual void run(); \
     private: \
         static tast::CTastBuilder<CTast_ ## name> m_builder; \
     }; \
-    tast::CTastBuilder<CTast_ ## name> CTast_ ## name::m_builder(#name, ## __VA_ARGS__); \
+    tast::CTastBuilder<CTast_ ## name> CTast_ ## name::m_builder(G_TASTMGR, #name, __FILE__, __LINE__, autoRun, ## __VA_ARGS__); \
     void CTast_ ## name::run()
 
-// run a named tast several times and return the average elapse microsecond. 
-// 1-3 arguemnt: TIME_TAST(name, times=10, verbose=true)
-#define TIME_TAST(...) tast::CTastMgr::GetInstance()->TimeTast(__VA_ARGS__)
+/// The TAST case by can be auto run without argument.
+#define DEF_TAST(name, ...) DEF_TAST_IMPL(name, true, ## __VA_ARGS__)
+/// The TOOL case need explicit argument to run.
+#define DEF_TOOL(name, ...) DEF_TAST_IMPL(name, false, ## __VA_ARGS__)
+
+/// Location used in other statement macros.
+#define SRC_LOCATION tast::CLocation(__FILE__, __LINE__, __FUNCTION__)
+
+/// Print the result of `expr`, may compare with `expect` to determine fail or pass.
+#define COUT(expr, ...) tast::CStatement(SRC_LOCATION, #expr).cout((expr), ## __VA_ARGS__)
+
+/// Only print the result if fail to compare `expr` with `expect`.
+#define COUTF(expr, expect, ...) tast::CStatement(SRC_LOCATION, #expr, true).cout((expr), (expect), ## __VA_ARGS__)
+
+/// Early return the current test function if the compare fails.
+#define COUT_ASSERT(expr, expect, ...) if (!tast::CStatement(SRC_LOCATION, #expr).cout((expr), (expect), ## __VA_ARGS__)) return
+
+/// Print description message for some test code.
+#define DESC(msg, ...) G_TASTMGR->Print(tast::COUT_BIT_DESC, "-- " msg, ## __VA_ARGS__)
+
+/// Set the begin time for measurement range within a test case.
+/// Otherwise default report the elapsed time(us) to run the whole case.
+#define TIME_TIC G_TASTMGR->SetBeginTime()
+/// Set the end time and return the elapsed time(us) since `TIC`.
+#define TIME_TOC G_TASTMGR->SetEndTime()
+
+/// Run a named tast several times and return the average elapse microsecond. 
+/// 1-3 arguemnt: TIME_TAST(name, times=10, msleep=1000)
+/// The 3rd argument means sleep several milli-second after each run and print
+/// some verbose message, pass 0 to suppress this behavior.
+#define TIME_TAST(...) G_TASTMGR->TimeTast(__VA_ARGS__)
+
+/// Access cli options stored in a map, may useful in body of `DEF_TOOL`. 
+/// Note `TAST_OPTION[key]` may insert with empty value when key not exist.
+#define TAST_OPTION G_TASTMGR->m_mapOption
 
 #endif /* end of include guard: TINYTAST_HPP__ */
