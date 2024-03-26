@@ -343,7 +343,7 @@ public: // what tast to run
         }
     }
 
-    // find tast by name to run, may with wild char [^$*], or `file.cpp:line` form.
+    // find tast by name to run, or `file.cpp:line` form, NOT support wild char [^$*].
     void RunTast(const std::string& name)
     {
         if (name.empty()) { return; }
