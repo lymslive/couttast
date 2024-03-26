@@ -1,0 +1,24 @@
+<xml>
+  <testcase id="C1" description="d1 d1">
+    <input>
+      aaaaaaaaaa.
+    </input>
+    <data>
+      ZZZZZZZZZZ.
+    </data>
+    <expect>
+      AAAAAAAAAA.
+    </expect>
+  </testcase>
+  <testcase id="C2" description="d2 d2">
+    <input>
+      bbbbbbbbbb.
+    </input>
+    <data>
+      ZZZZZZZZZZ.
+    </data>
+    <expect>
+      BBBBBBBBBB.
+    </expect>
+  </testcase>
+</xml>
