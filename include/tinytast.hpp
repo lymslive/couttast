@@ -532,7 +532,14 @@ struct CStatement
         return cout(valExpr, valExpect, valExpr == valExpect);
     }
 
-    bool cout(double valExpr, double valExpect, double limit = 0.0001)
+    bool cout(double valExpr, double valExpect)
+    {
+        // compare double a == b as much precision as possible.
+        bool bPass = (valExpr >= valExpect) && (valExpr <= valExpect);
+        return cout(valExpr, valExpect, bPass);
+    }
+
+    bool cout(double valExpr, double valExpect, double limit)
     {
         bool bPass = (valExpr > valExpect) ? ((valExpr - valExpect) <= limit) : ((valExpect - valExpr) <= limit);
         return cout(valExpr, valExpect, bPass);
