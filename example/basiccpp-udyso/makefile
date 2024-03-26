@@ -11,8 +11,6 @@ vpath %.cpp $(SRC_DIR)
 
 INC_DIR = ../../include
 INC = -I$(INC_DIR)
-#LIB_DIR = ../../lib
-#LIB = -L$(LIB_DIR) -ltast_main
 CXXFLAGS += $(INC)
 
 TARGET = ./libtast-basiccpp.so
@@ -23,7 +21,7 @@ LDFLAGS += -shared
 all: $(TARGET)
 
 $(TARGET) : $(OBJ)
-	$(CXX) $(LDFLAGS) -o $@ $^ $(CXXFLAGS) $(LIB)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(CXXFLAGS)
 
 # implict rule ok
 # $(OBJ) : %.o : %.cpp

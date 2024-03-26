@@ -6,7 +6,7 @@
 
 /// Expect to have `count` of errors by now, and reset to 0.
 /// May used when failed statement is intentional and then make the case pass.
-#define COUT_ERROR(count) tast::CStatement(SRC_LOCATION, "errors", G_TASTMGR).cout_error(count)
+#define COUT_ERROR(count) tast::CStatement(SRC_LOCATION, "errors").cout_error(count)
 
 /// Try `statement` expect to throw std::exception with `message` in what().
 /// The `message` should be literal string as `const char*` type, and

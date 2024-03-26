@@ -46,6 +46,37 @@ DEF_TAST(tinytast_compare, "basic cout compare assert")
     COUT(1.0 + 1.0, 2.0);
 }
 
+DEF_TAST(tinytast_float, "compare float number")
+{
+    double a = 1.0 / 3.0;
+    double b = 10.0 / 30.0;
+    COUT(a);
+    COUT(b);
+
+    if (a == b)
+    {
+        DESC("double a == b passed if branch");
+    }
+    else
+    {
+        DESC("double a == b NOT passed if branch");
+    }
+
+    COUT(a, b);
+    COUT(a == b);
+    COUT(a, b, 0.001);
+    COUT(a, b, 0.00001);
+
+    a = 0.314;
+    b = 0.314;
+    COUT(a, b);
+    COUT(a == b);
+    COUT(a, b, 0.001);
+    COUT(a, b, 0.00001);
+    COUT(a, 0.3142, 0.00001);
+    COUT_ERROR(1);
+}
+
 DEF_TOOL(tinytast_tictoc, "test tic toc")
 {
     usleep(100 * 1000); // pre action
@@ -89,5 +120,5 @@ DEF_TAST(gtest_simacro, "simulate macro in gtest style")
 }
 
 #ifdef USE_TINY_MAIN
-#include "LYUnitTest/tinymain.hpp"
+#include "tinymain.hpp"
 #endif

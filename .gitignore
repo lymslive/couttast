@@ -3,6 +3,7 @@
 *.so
 *.out
 *.bak
+*.tmp
 bin
 lib
 build

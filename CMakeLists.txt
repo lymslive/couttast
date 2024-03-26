@@ -23,6 +23,8 @@ add_library(couttast STATIC
     src/format.cpp
     src/parallel.cpp
     src/tinyini.cpp
+    src/file-compare.cpp
+    src/test-reader.cpp
     #src/tast_drive.cpp
     #src/tinytast.cpp
 )
@@ -42,17 +44,29 @@ add_executable(utCoutTast
     utest/test-parallel.cpp
     utest/test-tinyini.cpp
     utest/test-tinytast.cpp
+    utest/test-file-compare.cpp
 )
 
 target_link_libraries(utCoutTast
     PRIVATE couttast
 )
 
+# An unitttest to test tinytast.hpp only for C++98 compatibility.
+add_executable(utCxx98Tast
+    utest/test-tinytast.cpp
+)
+
+target_compile_definitions(utCxx98Tast PRIVATE USE_TINY_MAIN)
+
 # enable ctest, make test
 enable_testing()
 add_test(NAME utCoutTast
     COMMAND utCoutTast
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/utest
+)
+
+add_test(NAME utCxx98Tast
+    COMMAND utCxx98Tast
 )
 
 option(BUILD_EXAMPLE "build example" ON)
