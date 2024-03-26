@@ -1,6 +1,5 @@
 CXX ?= g++
 CXXFLAGS = -fPIC
-# CXXFLAGS += -Dprivate=public -Dprotected=pblic
 
 SRC_DIR = ../basiccpp
 SRC_ALL = $(wildcard $(SRC_DIR)/*.cpp)
@@ -13,7 +12,7 @@ vpath %.cpp $(SRC_DIR)
 INC_DIR = ../../include
 INC = -I$(INC_DIR)
 # LIB_DIR = ../../lib
-# LIB = -L$(LIB_DIR) -ltast_main
+# LIB = -L$(LIB_DIR) -ltinytast
 CXXFLAGS += $(INC)
 
 TARGET = ./tast-basiccpp.exe
