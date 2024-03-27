@@ -12,8 +12,6 @@
 
 #include "tinytast.hpp"
 
-#define HAS_UNIT_TEST 1
-
 namespace tast
 {
 
@@ -26,7 +24,16 @@ bool GetOption(const std::string& key, std::string& val);
 bool GetOption(const std::string& key, int& val);
 const std::vector<std::string>& GetArguments();
 
+/// The main entry point for the core test program.
+/// A custom main() function with strong symbol can be provided to override
+/// the default `::main` that only call this `tast::main()`.
+int main(int argc, char* argv[]);
+
 } // end of namespace tast
+
+/// Tell the compiler mean to compile unit test program.
+/// May useful in conditional compile.
+#define HAS_UNIT_TEST 1
 
 /// Make the function which embrace this marco only be called once.
 #define CALL_FUNCTION_ONCE(...) \
