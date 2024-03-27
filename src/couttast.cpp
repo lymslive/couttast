@@ -1,9 +1,3 @@
-/**
- * @file couttast.cpp
- * @author tanshuil
- * @date 2022-06-01
- * @brief 单元测试程序入口通用逻辑处理
- * */
 #include "couttast.h"
 #include "tinyini.h"
 #include "agent.h"
@@ -30,11 +24,9 @@ const std::vector<std::string>& GetArguments()
     return CTastMgr::GetInstance()->m_vecArg;
 }
 
-} // end of namespace tast
-
-int weak_main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    tast::CTinyIni cfg;
+    CTinyIni cfg;
     cfg.ParseCli(argc, argv);
 
     std::string strExeName = program_invocation_short_name;
@@ -42,7 +34,7 @@ int weak_main(int argc, char* argv[])
     if (0 == access(strIniFile.c_str(), R_OK))
     {
         fprintf(stderr, "load config: %s\n", strIniFile.c_str());
-        tast::CTinyIni iniTemp;
+        CTinyIni iniTemp;
         iniTemp.LoadIni(strIniFile);
         cfg.Merge(iniTemp);
     }
@@ -50,15 +42,23 @@ int weak_main(int argc, char* argv[])
     if (cfg.m_mapOption.empty() && cfg.m_vecArg.empty())
     {
         // no argument, quick call RUN_TAST
-        return tast::CTastMgr::GetInstance()->RunTast();
+        return CTastMgr::GetInstance()->RunTast();
     }
 
-    return tast::agent_run(*(tast::CTastMgr::GetInstance()), cfg);
+    return agent_run(*(CTastMgr::GetInstance()), cfg);
 }
 
-#define WEAK_SYMBOL __attribute__((weak))
-/** 默认的 main() 入口，弱函数，可覆盖。 */
+} // end of namespace tast
+
+#if defined(__GNUC__) || defined(__clang__)
+    #define WEAK_SYMBOL __attribute__((weak))
+#elif defined(_MSC_VER)
+    #define WEAK_SYMBOL __declspec(selectany)
+#else
+    #define WEAK_SYMBOL
+#endif
+
 int WEAK_SYMBOL main(int argc, char* argv[])
 {
-    return weak_main(argc, argv);
+    return tast::main(argc, argv);
 }

@@ -84,11 +84,7 @@ set(COUTTAST_HEADER
     include/gtest-macros.hpp
     include/logprint.hpp
     include/tast_util.hpp
-    #include/agent.h
-    #include/colour.h
-    #include/filter.h
-    #include/format.h
-    #include/parallel.h
+    include/private-access.hpp
     #include/tinyini.h
 )
 
