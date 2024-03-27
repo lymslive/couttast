@@ -56,7 +56,7 @@ $(UTEST_BIN) : $(UTEST_OBJ_ALL)
 	$(CXX) -o $@ $(CXXFLAGS) $^ -lcouttast -L./lib
 
 $(UTEST_MIN_BIN) : $(UTEST_DIR)/test-tinytast.cpp
-	$(CXX) -o $@ $(CXXFLAGS) $^ -DUSE_TINY_MAIN $(INCLUDE)
+	$(CXX) -o $@ -std=c++98 $^ -DUSE_TINY_MAIN $(INCLUDE)
 
 example:
 	make -C example/basiccpp-umain/
