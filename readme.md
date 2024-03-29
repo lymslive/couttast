@@ -1,5 +1,7 @@
 # 从 taste 到 test: 轻量级单元测试框架
 
+[English Version](./readme-en.md)
+
 ## 功能概览
 
 * 80% 核心功能在单个头文件中：[tinytast.hpp](include/tinytast.hpp) 可当 header-only 库使用。
