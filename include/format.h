@@ -25,10 +25,11 @@ struct CTastConfig
 {
     char help = 0;   //< --help flag
     char list = 0;   //< --list or --List flag
-    char colour = 0; //< enable colour print
+    char colour = 0; //< enable colour print or not
     char job = -1;   //< --job= option, multi-process
-    bool all = false;    //< --all flag
-    bool notool = false; //< --notool flag
+    bool all = false;    //< --all flag, include tools
+    bool notool = false; //< --notool flag, exclude tools
+    bool random = false; //< --random flag, reorder filtered cases
     std::string cout;    //< --cout= option, mask control print
     std::vector<std::string> adds; //< position argument may prefix +
     std::vector<std::string> subs; //< single - option to sub test cases

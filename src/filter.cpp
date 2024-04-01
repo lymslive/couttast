@@ -1,6 +1,9 @@
 #include "filter.h"
 #include "parallel.h"
 
+#include <random>
+#include <algorithm>
+
 namespace tast
 {
     
@@ -207,5 +210,12 @@ void filter_tast(const TastMap& tastInput, TastList& tastOutput, const CTastConf
 
     CFilterTast filter(tastInput, tastOutput, cfg);
     filter.Run();
+
+    if (cfg.random && tastOutput.size() > 2)
+    {
+        std::random_device rd;
+        std::mt19937 generator(rd());
+        std::shuffle(tastOutput.begin(), tastOutput.end(), generator);
+    }
 }
 } /* end of namespace tast */ 

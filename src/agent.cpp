@@ -51,7 +51,7 @@ public:
 
         if (m_config.list > 0)
         {
-            if (!m_config.adds.empty() || !m_config.subs.empty())
+            if (!m_config.adds.empty() || !m_config.subs.empty() || m_config.random)
             {
                 Filter();
             }
@@ -81,7 +81,17 @@ public:
         {
             w_pTastMgr->RunTast(item.first, item.second);
         }
-        return w_pTastMgr->Summary();
+        int failed = w_pTastMgr->Summary();
+        if (failed != 0 && m_config.random)
+        {
+            std::string order("!! --random: ");
+            for (auto& item : m_vecTastCase)
+            {
+                order.append(" ").append(item.first);
+            }
+            w_pTastMgr->Print(COUT_BIT_LAST, order.c_str());
+        }
+        return failed;
     }
 
     /// Run test cases in multiple process.
@@ -121,6 +131,7 @@ int CTastAgent::Help()
     w_pTastMgr->Print("  --cout=[fail|silent|none]: control less print output");
     w_pTastMgr->Print("  --all: run all test when no cli argument");
     w_pTastMgr->Print("  --notool: donot run tool even when match cli argument");
+    w_pTastMgr->Print("  --random: run or list the test cases in random order");
     w_pTastMgr->Print("  --job=: run in multiple process");
     w_pTastMgr->Print("  --nocolour: disable colour print which default enabled");
     w_pTastMgr->Print("  --colour[=always]: enable colour print even in silent mode or not print to terminal");

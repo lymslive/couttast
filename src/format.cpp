@@ -39,6 +39,10 @@ void CTastConfig::ParseCli(const CTinyCli& cli)
         {
             this->notool = true;
         }
+        else if (opt.first == "random")
+        {
+            this->random = true;
+        }
         else if (opt.first == "job")
         {
             this->job = atoi(opt.second.c_str());

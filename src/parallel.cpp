@@ -145,6 +145,7 @@ struct CProcessWork
     {
         PreSort();
         m_ranges = slice_index(w_tastList.size(), m_workers);
+        // todo: --random, reorder each range before child process
     }
 
     void DealRange(const TastList& tastList, IndexRange range)
@@ -224,6 +225,7 @@ struct CProcessWork
         m_summary.Print(output);
         w_tastMgr.Print(COUT_BIT_LAST, output.c_str());
         return m_summary.fail;
+        // todo: report random order if any fail
     }
 
     int ForkRun()
@@ -247,7 +249,6 @@ struct CProcessWork
             }
             else if (pid > 0) // current parent process
             {
-                // todo: when use range in m_tastPart ??
                 IndexRange range = m_ranges[i];
                 DESC("forked child process[%d] for range[%d,%d)", pid, range.first, range.second);
             }

@@ -227,3 +227,45 @@ DEF_TAST(filter_overlap, "test filter when one test name is substr of another")
         COUT(tastCase);
     }
 }
+
+DEF_TAST(filter_random, "test filter with --random")
+{
+    tast::CTastMgr stTastMgr;
+    FillSampleTast(stTastMgr, 20);
+
+    tast::TastList tastCaseAll;
+    DESC("filter: --all");
+    {
+        tast::CTinyIni cfg;
+        cfg.m_mapOption["all"] = "--";
+        tast::TastList tastCase;
+        tast::filter_tast(stTastMgr.GetTastCase(), tastCase, cfg);
+        COUT(tastCase.size(), 20);
+        tastCaseAll.swap(tastCase);
+    }
+
+    tast::TastList tastCaseRandom;
+    DESC("filter: --random --all");
+    {
+        tast::CTinyIni cfg;
+        cfg.m_mapOption["all"] = "--";
+        tast::TastList tastCase;
+        tast::filter_tast(stTastMgr.GetTastCase(), tastCase, cfg);
+        COUT(tastCaseAll == tastCase, true);
+
+        cfg.m_mapOption["random"] = "--";
+        tastCase.clear();
+        tast::filter_tast(stTastMgr.GetTastCase(), tastCase, cfg);
+        COUT(tastCase.size(), 20);
+        for (auto& item : tastCase)
+        {
+            std::cout << item << std::endl;
+        }
+        tastCaseRandom.swap(tastCase);
+    }
+
+    if (!COUT(tastCaseAll != tastCaseRandom, true))
+    {
+        DESC("may randomly equal with litter chance, re-run this test test case to confirm!");
+    }
+}
