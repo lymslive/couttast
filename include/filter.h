@@ -31,6 +31,7 @@ namespace tast
  *     but requires at least two characters to distinguish from short option;
  *   9. option `--all` add all test case include tools from `DEF_TOOL`.
  *   10. option `--notool` means not include tool cases even match some argument;
+ *   11. option `--random` means randomly reorder the list if more than 2 length;
  *
  * @note The output is vector that keep the order specified in command line
  *  order, while each test case only output onces.
@@ -43,6 +44,9 @@ void filter_tast(const TastMap& tastInput, TastList& tastOutput, const CTinyIni&
 
 /// Filter test case by config already parsed from command line arguments.
 void filter_tast(const TastMap& tastInput, TastList& tastOutput, const CTastConfig& cfg);
+
+/// Reorder randomly for a test case list, in [begin, end).
+void random_tast(TastEntry* begin, TastEntry* end);
 
 } // end of namespace tast
 

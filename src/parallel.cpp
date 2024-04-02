@@ -1,4 +1,5 @@
 #include "parallel.h"
+#include "filter.h"
 
 #include <fstream>
 #include <algorithm>
@@ -103,6 +104,11 @@ struct CProcessWork
         m_runfile += ".run";
     }
 
+    bool HasRandom() const
+    {
+        return w_tastMgr.m_mapOption.count("random") > 0;
+    }
+
     // copy and sort
     void PreSort()
     {
@@ -145,7 +151,21 @@ struct CProcessWork
     {
         PreSort();
         m_ranges = slice_index(w_tastList.size(), m_workers);
-        // todo: --random, reorder each range before child process
+
+        // --random, reorder each range before child process
+        // no need to reorder w_tastList, as has been random passed in.
+        if (HasRandom() && !m_tastList.empty())
+        {
+            RandomRange();
+        }
+    }
+
+    void RandomRange()
+    {
+        for (auto& range : m_ranges)
+        {
+            random_tast(&m_tastList[range.first], &m_tastList[range.second]);
+        }
     }
 
     void DealRange(const TastList& tastList, IndexRange range)
@@ -224,8 +244,58 @@ struct CProcessWork
         std::string output;
         m_summary.Print(output);
         w_tastMgr.Print(COUT_BIT_LAST, output.c_str());
+
+        // report run order if any fail
+        if (m_summary.fail != 0 || w_tastMgr.CoutMask(COUT_BIT_DESC))
+        {
+            output.clear();
+            if (m_tastList.empty())
+            {
+                RerportRange(output, w_tastList);
+            }
+            else 
+            {
+                RerportRange(output, m_tastList);
+            }
+            // no COUT_BIT control to ouput all
+            w_tastMgr.Print(output.c_str());
+        }
+
+        // report incorrect amount of run cases.
+        int total = m_summary.fail + m_summary.pass;
+        if (total != w_tastList.size())
+        {
+            output.clear();
+            output += "!! Total run cases: ";
+            output += std::to_string(total);
+            output += ", while expect to run cases: ";
+            output += std::to_string(w_tastList.size());
+            w_tastMgr.Print(COUT_BIT_LAST, output.c_str());
+        }
+
         return m_summary.fail;
-        // todo: report random order if any fail
+    }
+
+    void RerportRange(std::string& output, const TastList& tastList)
+    {
+        int i = 0;
+        for (auto& range : m_ranges)
+        {
+            std::string order("-- process");
+            order.append("[").append(std::to_string(i)).append("]:");
+            i++;
+
+            for (int j = range.first; j < range.second; ++j)
+            {
+                order.append(" ").append(tastList[j].first);
+            }
+
+            if (!output.empty())
+            {
+                output.append("\n");
+            }
+            output.append(order);
+        }
     }
 
     int ForkRun()

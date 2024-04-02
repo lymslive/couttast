@@ -194,10 +194,7 @@ void CTastSummary::Print(std::string& output) const
     output.append("<< [FAIL] ").append(std::to_string(this->fail));
     for (size_t i = 0; i < this->failNames.size(); ++i)
     {
-        if (i > 0)
-        {
-            output.append("\n");
-        }
+        output.append("\n");
         output.append("!! ").append(this->failNames[i]);
     }
 }

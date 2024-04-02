@@ -81,10 +81,11 @@ public:
         {
             w_pTastMgr->RunTast(item.first, item.second);
         }
+
         int failed = w_pTastMgr->Summary();
         if (failed != 0 && m_config.random)
         {
-            std::string order("!! --random: ");
+            std::string order("-- random:");
             for (auto& item : m_vecTastCase)
             {
                 order.append(" ").append(item.first);

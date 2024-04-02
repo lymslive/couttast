@@ -244,7 +244,7 @@ std::string strhex(const T* val, size_t length)
     return CHex::From(reinterpret_cast<const unsigned char*>(val), length);
 }
 
-/** print val in hex bytes with lower 0-9A-F */
+/** print val in hex bytes with upper 0-9A-F */
 template <typename T>
 std::string strheX(const T& val)
 {

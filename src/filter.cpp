@@ -213,9 +213,22 @@ void filter_tast(const TastMap& tastInput, TastList& tastOutput, const CTastConf
 
     if (cfg.random && tastOutput.size() > 2)
     {
-        std::random_device rd;
-        std::mt19937 generator(rd());
-        std::shuffle(tastOutput.begin(), tastOutput.end(), generator);
+        random_tast(&tastOutput[0], &tastOutput[tastOutput.size()]);
+        // random_tast(tastOutput.begin(), tastOutput.end());
+        // std::random_device rd;
+        // std::mt19937 generator(rd());
+        // std::shuffle(tastOutput.begin(), tastOutput.end(), generator);
     }
 }
+
+void random_tast(TastEntry* begin, TastEntry* end)
+{
+    if (end - begin > 2)
+    {
+        std::random_device rd;
+        std::mt19937 generator(rd());
+        std::shuffle(begin, end, generator);
+    }
+}
+
 } /* end of namespace tast */ 

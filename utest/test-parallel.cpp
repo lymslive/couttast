@@ -9,18 +9,26 @@ DEF_TOOL(pal_single, "run in single-process: compare standar")
     stTastMgr.RunTast();
 }
 
-DEF_TOOL(pal_process, "run in multi-process: --process=4, --case=100")
+// can also use --random
+DEF_TOOL(pal_process, "run in multi-process: --process=4 --case=100 --error=0")
 {
     int nProcess = 4;
     int nCase = 100;
+    int nError = 0;
     tast::GetOption("process", nProcess);
     tast::GetOption("case", nCase);
+    tast::GetOption("error", nError);
 
     DESC("config option: --process=%d, --case=%d", nProcess, nCase);
 
     srand(123456);
     tast::CTastMgr stTastMgr;
     FillSampleTast(stTastMgr, nCase, "mp");
+    if (nError > 0)
+    {
+        RandError(nError);
+    }
+
     TIME_TIC;
     tast::process_run(stTastMgr.GetTastCase(), nProcess);
     auto toc = TIME_TOC;
@@ -91,7 +99,7 @@ DEF_TAST(pal_runresult, "test deal with runtime result")
     COUT(result.GetRuntime("mp_case_101"), result.m_avgRuntime);
 }
 
-DEF_TOOL(pal_presort, "test presort and partition")
+DEF_TOOL(pal_presort, "test presort and partition: --random")
 {
     int nProcess = 4;
     int nCase = 100;
@@ -105,7 +113,8 @@ DEF_TOOL(pal_presort, "test presort and partition")
         tastList.push_back(item);
     }
 
-    tast::CProcessWork work(tastList, nProcess, stTastMgr);
+    // tast::CProcessWork work(tastList, nProcess, stTastMgr);
+    tast::CProcessWork work(tastList, nProcess, *G_TASTMGR);
     work.m_runfile = "sample.run";
     work.Partition();
     COUT(work.m_tastList.size(), 100);

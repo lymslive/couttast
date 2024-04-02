@@ -13,8 +13,25 @@ struct CTastSample : public tast::CTastCase
     {
         int ms = 80 + rand() % 40;
         usleep(ms * 1000);
+
+        if (randError > 0)
+        {
+            if (rand() % 100 < randError)
+            {
+                COUT("simulate error", "actually no error");
+            }
+        }
     }
+
+    static int randError;
 };
+
+int CTastSample::randError = 0;
+
+void RandError(int percent)
+{
+    CTastSample::randError = percent;
+}
 
 void FillSampleTast(tast::CTastMgr& stTastMgr, int nCount, const char* prefix)
 {
