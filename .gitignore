@@ -4,6 +4,7 @@
 *.out
 *.bak
 *.tmp
+*.run
 bin
 lib
 build
