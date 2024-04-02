@@ -90,7 +90,10 @@ public:
             {
                 order.append(" ").append(item.first);
             }
-            w_pTastMgr->Print(COUT_BIT_LAST, order.c_str());
+            if (w_pTastMgr->CoutMask(COUT_BIT_DESC))
+            {
+                w_pTastMgr->Print(order.c_str());
+            }
         }
         return failed;
     }
