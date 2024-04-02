@@ -271,6 +271,8 @@ void colour_print(const char* message)
         next = strchr(head, '\n');
     }
     st.PrintLine(head);
+
+    fflush(stdout);
 }
 
 bool colour_support()

@@ -209,6 +209,7 @@ public: // output
         else
         {
             printf("%s\n", str);
+            fflush(stdout);
         }
     }
 
