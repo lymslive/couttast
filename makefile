@@ -88,3 +88,16 @@ uninstall:
 	rm -rf $(INSTALL_LIB)/$(notdir $(TINYTAST_LIB))
 	rm -rf $(INSTALL_LIB)/$(notdir $(COUTTAST_LIB))
 
+cmake:
+	@mkdir -p build
+	cd build
+	cmake ..
+	make
+	make test
+
+cmake.debug:
+	cd build
+	make clean
+	cmake .. -DCMAKE_BUILD_TYPE=Debug
+	make
+	make test
