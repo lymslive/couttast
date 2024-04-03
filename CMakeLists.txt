@@ -69,7 +69,7 @@ add_test(NAME utCxx98Tast
     COMMAND utCxx98Tast
 )
 
-option(BUILD_EXAMPLE "build example" ON)
+option(BUILD_EXAMPLE "build example" OFF)
 if(BUILD_EXAMPLE)
     add_subdirectory(example)
 endif()
