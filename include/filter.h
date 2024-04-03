@@ -48,6 +48,9 @@ void filter_tast(const TastMap& tastInput, TastList& tastOutput, const CTastConf
 /// Reorder randomly for a test case list, in [begin, end).
 void random_tast(TastEntry* begin, TastEntry* end);
 
+/// The min amount of test cases to enable random order.
+const int MINLIST_TO_RANDOM = 2;
+
 } // end of namespace tast
 
 #endif /* end of include guard: FILTER_H__ */
