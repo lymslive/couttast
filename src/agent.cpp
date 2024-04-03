@@ -24,11 +24,30 @@ struct CTastAgent
     }
 
 public:
+    // Main flow to run test or command.
+    int Run();
 
-    /// Print help message.
-    int Help();
-    /// Print all or filtered test cases name, one in each line.
-    int List(bool bTable);
+    /// Print help message for --help.
+    bool Help();
+    /// Print all or filtered test cases name, one in each line for --list.
+    bool List(bool bTable);
+
+    bool SkipRun(int& exitCode)
+    {
+        return (m_config.help > 0 && Help())
+            || (m_config.list > 0 && List(m_config.list == 'L'));
+    }
+
+    /// Run in sub command mode.
+    bool SubCommand(int& exitCode);
+
+    /// Run test cases in current process locally.
+    int LocalRun();
+    /// Run test cases in multiple child process.
+    int ProcessRun()
+    {
+        return process_run(m_vecTastCase, m_config.job, w_pTastMgr);
+    }
 
     /// Filter test case in `w_pTastMgr`, saved in this `m_mapTastCase`.
     void Filter()
@@ -38,28 +57,6 @@ public:
             filter_tast(w_pTastMgr->GetTastCase(), m_vecTastCase, m_config);
             m_bFiltered = true;
         }
-    }
-
-    /// Check whether skip run test case as --help or --list.
-    bool SkipRun()
-    {
-        if (m_config.help > 0)
-        {
-            Help();
-            return true;
-        }
-
-        if (m_config.list > 0)
-        {
-            if (!m_config.adds.empty() || !m_config.subs.empty() || m_config.random)
-            {
-                Filter();
-            }
-            List(m_config.list == 'L');
-            return true;
-        }
-
-        return false;
     }
 
     /// Move cli argument into the tast manager.
@@ -73,62 +70,11 @@ public:
         }
     }
 
-    /// Run test cases in current process locally.
-    int LocalRun()
-    {
-        MoveArgument();
-        for (auto& item : m_vecTastCase)
-        {
-            w_pTastMgr->RunTast(item.first, item.second);
-        }
-
-        int failed = w_pTastMgr->Summary();
-        if (failed != 0 && m_config.random)
-        {
-            std::string order("-- random:");
-            for (auto& item : m_vecTastCase)
-            {
-                order.append(" ").append(item.first);
-            }
-            if (w_pTastMgr->CoutMask(COUT_BIT_DESC))
-            {
-                w_pTastMgr->Print(order.c_str());
-            }
-        }
-        return failed;
-    }
-
-    /// Run test cases in multiple process.
-    int ProcessRun()
-    {
-        MoveArgument();
-        return process_run(m_vecTastCase, m_config.job, w_pTastMgr);
-    }
-
-    // Main flow to run tast.
-    int Run()
-    {
-        // when --help --list ?
-        if (SkipRun())
-        {
-            return 0;
-        }
-
-        // when empty argument, may still need filter to run, but not need for list
-        Filter();
-
-        if (m_config.colour != 'n' && colour_support() || m_config.colour == 'a')
-        {
-            w_pTastMgr->SetPrint(colour_print);
-        }
-
-        return m_config.job >= 0 ? ProcessRun() : LocalRun();
-    }
 };
 
 /* ---------------------------------------------------------------------- */
 
-int CTastAgent::Help()
+bool CTastAgent::Help()
 {
     w_pTastMgr->Print("./tast_program [options] [testcase ...]");
     w_pTastMgr->Print("  --list (--List): list all test cases (also with description)");
@@ -174,11 +120,16 @@ int CTastAgent::Help()
         w_pTastMgr->Print(0, "tools[%d]: only run with explicit argument\n  %s", nTool, strTool.c_str());
     }
 
-    return 0;
+    return true;
 }
 
-int CTastAgent::List(bool bTable)
+bool CTastAgent::List(bool bTable)
 {
+    if (!m_config.adds.empty() || !m_config.subs.empty() || m_config.random)
+    {
+        Filter();
+    }
+
     if (m_bFiltered)
     {
         for (auto& item : m_vecTastCase)
@@ -200,7 +151,89 @@ int CTastAgent::List(bool bTable)
         }
     }
 
-	return 0;
+	return true;
+}
+
+bool CTastAgent::SubCommand(int& exitCode)
+{
+    if (w_pConfig->m_vecArg.empty())
+    {
+        return false;
+    }
+
+    // fix me: this may not the first cmdline argv[1]
+    std::string& firstArg = w_pConfig->m_vecArg[0];
+    auto it = w_pTastMgr->GetTastCase().find(firstArg);
+    if (it == w_pTastMgr->GetTastCase().end())
+    {
+        return false;
+    }
+
+    // not tool
+    if (it->second->m_autoRun)
+    {
+        return false;
+    }
+
+    // only run this tast
+    w_pTastMgr->CoutDisable(COUT_BIT_HEAD);
+    w_pTastMgr->CoutDisable(COUT_BIT_FOOT);
+    w_pTastMgr->CoutDisable(COUT_BIT_LINE);
+    w_pTastMgr->CoutDisable(COUT_BIT_LAST);
+    w_pTastMgr->RunTast(it->first, it->second);
+
+    // not set exitCode, let it default to 0.
+    return true;
+}
+
+int CTastAgent::LocalRun()
+{
+    for (auto& item : m_vecTastCase)
+    {
+        w_pTastMgr->RunTast(item.first, item.second);
+    }
+
+    int failed = w_pTastMgr->Summary();
+    if (failed != 0 && m_config.random)
+    {
+        std::string order("-- random:");
+        for (auto& item : m_vecTastCase)
+        {
+            order.append(" ").append(item.first);
+        }
+        if (w_pTastMgr->CoutMask(COUT_BIT_DESC))
+        {
+            w_pTastMgr->Print(order.c_str());
+        }
+    }
+    return failed;
+}
+
+int CTastAgent::Run()
+{
+    int exitCode = 0;
+    if (SubCommand(exitCode) || SkipRun(exitCode))
+    {
+        return exitCode;
+    }
+
+    // when empty argument, may still need filter to run, but not need for list
+    Filter();
+    MoveArgument();
+
+    if (m_config.colour != 'n' && colour_support() || m_config.colour == 'a')
+    {
+        w_pTastMgr->SetPrint(colour_print);
+    }
+
+    if (m_config.job >= 0 && m_vecTastCase.size() >= MINLIST_TO_PROCESS)
+    {
+        return ProcessRun();
+    }
+    else
+    {
+        return LocalRun();
+    }
 }
 
 /* ---------------------------------------------------------------------- */

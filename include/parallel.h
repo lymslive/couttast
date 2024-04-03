@@ -12,6 +12,9 @@
 namespace tast
 {
 
+/// The min amount of test cases to enable child process.
+const int MINLIST_TO_PROCESS = 8;
+
 /** Run a list of test cases in multiple process.
  * @param [IN] tastList, a ordered list of test cases to be run.
  * @param [IN] workers, the count of child process to run those test cases.
