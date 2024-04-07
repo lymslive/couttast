@@ -39,13 +39,12 @@ int main(int argc, char* argv[])
         cfg.Merge(iniTemp);
     }
 
-    if (cfg.m_mapOption.empty() && cfg.m_vecArg.empty())
+    const char* firstArg = nullptr;
+    if (argc > 1)
     {
-        // no argument, quick call RUN_TAST
-        return CTastMgr::GetInstance()->RunTast();
+        firstArg = argv[1];
     }
-
-    return agent_run(*(CTastMgr::GetInstance()), cfg);
+    return agent_run(*(CTastMgr::GetInstance()), cfg, firstArg);
 }
 
 } // end of namespace tast

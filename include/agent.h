@@ -15,6 +15,7 @@ namespace tast
 /** Wrap a tast manager and run with command line argument config.
  * @param [IN] stTastMgr, may the global `G_TASTMGR` but not necessary.
  * @param [IN] cfg, cli option/arguemnt and may merged with ini config.
+ * @param [IN] firstArg, the first argument from cli, but not ini, may nullptr.
  * @return int, the count of failed test cases.
  * @details 
  *   The tast agent enhance the basic tast manager, and support some extra
@@ -24,10 +25,15 @@ namespace tast
  *   no positional argument provided.
  * - run test concurrently in multiple process or thread, to reduce the run
  *   time if there are many test cases.
+ * - Sub command mode, if the first argument match exactly a test case defined
+ *   by 'DEF_TOOL'.
+ * - Print colourful output to terminal if supported.
  * */
-int agent_run(CTastMgr& stTastMgr, CTinyIni& cfg);
+int agent_run(CTastMgr& stTastMgr, CTinyIni& cfg, const char* firstArg);
 
+// A function type without any argument nor return value.
 typedef void (*voidfun_t)();
+
 /** Calculate the average run time of a function.
  * @param [IN] fun, the function to measure time.
  * @param [IN] times, loop times to run `fun`.

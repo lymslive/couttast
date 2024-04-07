@@ -10,15 +10,14 @@ namespace tast
 /// Custom warpper for `CTastMgr`, to provide advance features.
 struct CTastAgent
 {
-    /// Borrowed TastMgr object.
-    CTastMgr* w_pTastMgr = nullptr;
-    CTinyIni* w_pConfig = nullptr;
-    CTastConfig m_config;
-    TastList m_vecTastCase;
-    bool m_bFiltered = false;
+    CTastMgr* w_pTastMgr = nullptr;    //< Borrowed TastMgr object.
+    CTinyIni* w_pConfig = nullptr;     //< Cli arguments merged by ini.
+    const char* w_pFirstArg = nullptr; //< First cli argument.
+    CTastConfig m_config;              //< Parsed config argument.
+    TastList m_vecTastCase;            //< Filtered test case list.
 
-    CTastAgent(CTastMgr& stTastMgr, CTinyIni& cfg)
-        : w_pTastMgr(&stTastMgr), w_pConfig(&cfg)
+    CTastAgent(CTastMgr& stTastMgr, CTinyIni& cfg, const char* firstArg)
+        : w_pTastMgr(&stTastMgr), w_pConfig(&cfg), w_pFirstArg(firstArg)
     {
         m_config.ParseCli(*w_pConfig);
     }
@@ -38,7 +37,10 @@ public:
             || (m_config.list > 0 && List(m_config.list == 'L'));
     }
 
-    /// Run in sub command mode.
+    /// Zero argument run mode. Neither cli nor ini has any arguments.
+    bool ZeroMode(int& exitCode);
+
+    /// Run in sub command mode. Cli(but not ini) has argument from DEF_TOOL,
     bool SubCommand(int& exitCode);
 
     /// Run test cases in current process locally.
@@ -52,10 +54,9 @@ public:
     /// Filter test case in `w_pTastMgr`, saved in this `m_mapTastCase`.
     void Filter()
     {
-        if (!m_bFiltered)
+        if (m_vecTastCase.empty())
         {
             filter_tast(w_pTastMgr->GetTastCase(), m_vecTastCase, m_config);
-            m_bFiltered = true;
         }
     }
 
@@ -130,7 +131,7 @@ bool CTastAgent::List(bool bTable)
         Filter();
     }
 
-    if (m_bFiltered)
+    if (!m_vecTastCase.empty())
     {
         for (auto& item : m_vecTastCase)
         {
@@ -154,16 +155,33 @@ bool CTastAgent::List(bool bTable)
 	return true;
 }
 
-bool CTastAgent::SubCommand(int& exitCode)
+bool CTastAgent::ZeroMode(int& exitCode)
 {
-    if (w_pConfig->m_vecArg.empty())
+    if (w_pFirstArg != nullptr
+            || !w_pConfig->m_vecArg.empty() || !w_pConfig->m_mapOption.empty())
     {
         return false;
     }
 
-    // fix me: this may not the first cmdline argv[1]
-    std::string& firstArg = w_pConfig->m_vecArg[0];
-    auto it = w_pTastMgr->GetTastCase().find(firstArg);
+    if (colour_support())
+    {
+        w_pTastMgr->SetPrint(colour_print);
+    }
+
+    // no argument, quick call RUN_TAST
+    exitCode = w_pTastMgr->RunTast();
+    return true;
+}
+
+bool CTastAgent::SubCommand(int& exitCode)
+{
+    if (w_pFirstArg == nullptr || w_pFirstArg[0] == '\0'
+            || w_pFirstArg[0] == '-' || w_pFirstArg[0] == '+')
+    {
+        return false;
+    }
+
+    auto it = w_pTastMgr->GetTastCase().find(w_pFirstArg);
     if (it == w_pTastMgr->GetTastCase().end())
     {
         return false;
@@ -212,12 +230,11 @@ int CTastAgent::LocalRun()
 int CTastAgent::Run()
 {
     int exitCode = 0;
-    if (SubCommand(exitCode) || SkipRun(exitCode))
+    if (ZeroMode(exitCode) || SubCommand(exitCode) || SkipRun(exitCode))
     {
         return exitCode;
     }
 
-    // when empty argument, may still need filter to run, but not need for list
     Filter();
     MoveArgument();
 
@@ -238,9 +255,9 @@ int CTastAgent::Run()
 
 /* ---------------------------------------------------------------------- */
 
-int agent_run(CTastMgr& stTastMgr, CTinyIni& cfg)
+int agent_run(CTastMgr& stTastMgr, CTinyIni& cfg, const char* firstArg)
 {
-    CTastAgent stAgent(stTastMgr, cfg);
+    CTastAgent stAgent(stTastMgr, cfg, firstArg);
     return stAgent.Run();
 
 }
