@@ -105,15 +105,21 @@ struct CTastMgr; // forward declaration
 /// Abstract base class for a test case.
 struct CTastCase
 {
-    CTastMgr* w_pTastMgr;      //< the owner `CTastMgr` object.
     std::string m_description; //< one line description for test case.
     std::string m_file;        //< file name where defined the test case.
     int m_line;                //< line number within file where defined.
     bool m_autoRun;            //< can auto run without cli argument.
 
-    CTastCase(CTastMgr* pTastMgr, const std::string& desc, const std::string& file, int line, bool autoRun = true)
-        : w_pTastMgr(pTastMgr), m_description(desc), m_file(file), m_line(line), m_autoRun(autoRun) {}
+    CTastCase() :/*m_description(desc), m_file(file),*/ m_line(0), m_autoRun(true) {}
     virtual ~CTastCase() {}
+    void ctor(const std::string& desc, const std::string& file, int line, bool autoRun = true)
+    {
+        m_description = desc;
+        m_file = file;
+        m_line = line;
+        m_autoRun = autoRun;
+    }
+
     virtual void run() = 0;
 
     std::string List(const std::string& prefix, bool full = false)
@@ -438,11 +444,13 @@ public: // overview tast
 template <typename T>
 struct CTastBuilder
 {
-    CTastBuilder(CTastMgr* pTastMgr, const std::string& name, const char* file, int line, bool autoRun, const std::string& desc = "")
+    CTastBuilder(const std::string& name, const char* file, int line, bool autoRun, const std::string& desc = "")
     {
         const char* slash = strrchr(file, '/');
         file = slash ? slash + 1 : file;
-        CTastMgr::GetInstance()->AddTast(name, new T(pTastMgr, desc, file, line, autoRun));
+        T* instance = new T();
+        instance->ctor(desc, file, line, autoRun);
+        CTastMgr::GetInstance()->AddTast(name, instance);
     }
 };
 
@@ -569,12 +577,11 @@ struct CStatement
     class CTast_ ## name : public tast::CTastCase \
     { \
     public: \
-        CTast_ ## name(tast::CTastMgr* pTastMgr, const std::string& desc, const std::string& file, int line, bool autoArg) : tast::CTastCase(pTastMgr, desc, file, line, autoArg) {} \
         virtual void run(); \
     private: \
         static tast::CTastBuilder<CTast_ ## name> m_builder; \
     }; \
-    tast::CTastBuilder<CTast_ ## name> CTast_ ## name::m_builder(G_TASTMGR, #name, __FILE__, __LINE__, autoRun, ## __VA_ARGS__); \
+    tast::CTastBuilder<CTast_ ## name> CTast_ ## name::m_builder(#name, __FILE__, __LINE__, autoRun, ## __VA_ARGS__); \
     void CTast_ ## name::run()
 
 /// The TAST case by can be auto run without argument.

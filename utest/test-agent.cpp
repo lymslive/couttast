@@ -5,8 +5,8 @@
 struct CTastSample : public tast::CTastCase
 {
     CTastSample(tast::CTastMgr* pTastMgr, const std::string& desc, const std::string& file, int line, bool autoRun = true)
-        : CTastCase(pTastMgr, desc, file, line, autoRun)
     {
+        ctor(desc, file, line, autoRun);
     }
 
     virtual void run() override

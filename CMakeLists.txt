@@ -45,6 +45,7 @@ add_executable(utCoutTast
     utest/test-tinyini.cpp
     utest/test-tinytast.cpp
     utest/test-file-compare.cpp
+    utest/test-classtast.cpp
 )
 
 target_link_libraries(utCoutTast
@@ -54,6 +55,7 @@ target_link_libraries(utCoutTast
 # An unitttest to test tinytast.hpp only for C++98 compatibility.
 add_executable(utCxx98Tast
     utest/test-tinytast.cpp
+    utest/test-classtast.cpp
 )
 
 target_compile_definitions(utCxx98Tast PRIVATE USE_TINY_MAIN)
