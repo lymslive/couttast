@@ -77,3 +77,23 @@ DEC_TOOL(MySuite, bbb, "test suite by DEC_TOOL")
     strValue[1] = 'B';
     COUT(strValue, "aBcdefg");
 }
+
+struct add : public tast::CTastSuite
+{
+    void help(std::string& output) const
+    {
+        output += m_description;
+        output += "\ncustome help for usage:\n";
+        output += "add.exe --left=? --right=?";
+    }
+};
+
+DEC_TOOL(add, exe, "sample tool for add two number")
+{
+    std::string strLeft = TAST_OPTION["left"];
+    std::string strRight = TAST_OPTION["right"];
+    int left = atoi(strLeft.c_str());
+    int right = atoi(strRight.c_str());
+    int result = left + right;
+    std::cout << "result: " << result << std::endl;
+}

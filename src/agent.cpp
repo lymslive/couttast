@@ -193,6 +193,17 @@ bool CTastAgent::SubCommand(int& exitCode)
         return false;
     }
 
+    // only help for this tool
+    if (m_config.help > 0)
+    {
+        std::string output;
+        it->second->help(output);
+        w_pTastMgr->Print(output.c_str());
+        return true;;
+    }
+
+    MoveArgument();
+
     // only run this tast
     w_pTastMgr->CoutDisable(COUT_BIT_HEAD);
     w_pTastMgr->CoutDisable(COUT_BIT_FOOT);

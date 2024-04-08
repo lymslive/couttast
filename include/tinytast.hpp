@@ -119,6 +119,7 @@ struct CTastCase
         m_line = line;
         m_autoRun = autoRun;
     }
+    virtual void help(std::string& output) const { output =  m_description; }
 
     virtual void run() = 0;
 
