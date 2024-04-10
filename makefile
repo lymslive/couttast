@@ -90,14 +90,7 @@ uninstall:
 
 cmake:
 	@mkdir -p build
-	cd build
-	cmake ..
-	make
-	make test
+	cd build && cmake .. && make && make test
 
 cmake.debug:
-	cd build
-	make clean
-	cmake .. -DCMAKE_BUILD_TYPE=Debug
-	make
-	make test
+	cd build && make clean && cmake .. -DCMAKE_BUILD_TYPE=Debug && make && make test
