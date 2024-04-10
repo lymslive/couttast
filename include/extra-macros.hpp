@@ -1,8 +1,15 @@
+/**
+ * @file extra-macros.hpp
+ * @author lymslive
+ * @date 2024-04-10
+ * @brief Extend head-only macros.
+ * */
 #ifndef EXTRA_MACROS_HPP__
 #define EXTRA_MACROS_HPP__
 
 #include "tinytast.hpp"
 #include "gtest-macros.hpp"
+#include "classtast.hpp"
 
 /// Expect to have `count` of errors by now, and reset to 0.
 /// May used when failed statement is intentional and then make the case pass.
