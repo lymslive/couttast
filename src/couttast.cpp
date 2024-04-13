@@ -34,6 +34,7 @@ void CheckChdir(const CTinyIni& cfg)
         if (0 != ::chdir(cwd.c_str()))
         {
             fprintf(stderr, "failed to chdir: %s\n", cwd.c_str());
+            ::exit(1);
         }
     }
 }
