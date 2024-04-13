@@ -86,6 +86,7 @@ bool CTastAgent::Help()
     w_pTastMgr->Print("  --job=: run in multiple process");
     w_pTastMgr->Print("  --nocolour: disable colour print which default enabled");
     w_pTastMgr->Print("  --colour[=always]: enable colour print even in silent mode or not print to terminal");
+    w_pTastMgr->Print("  --cwd: change to new working drirectory");
     w_pTastMgr->Print("  --help: print this message");
 
     std::string strTast;
