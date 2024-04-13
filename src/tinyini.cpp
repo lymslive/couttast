@@ -6,7 +6,7 @@
 
 namespace util {
 
-// 剪除首尾空格
+// Trim space in both ends in-place, return the count of chars removed.
 int Trim(std::string& src)
 {
     size_t size = src.size();

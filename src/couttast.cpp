@@ -5,6 +5,7 @@
 #include <string>
 #include <unistd.h>
 #include <errno.h>
+#include <unistd.h>
 
 namespace tast
 {
@@ -24,10 +25,24 @@ const std::vector<std::string>& GetArguments()
     return CTastMgr::GetInstance()->m_vecArg;
 }
 
+void CheckChdir(const CTinyIni& cfg)
+{
+    auto it = cfg.m_mapOption.find("cwd");
+    if (it != cfg.m_mapOption.end())
+    {
+        const std::string& cwd = it->second;
+        if (0 != ::chdir(cwd.c_str()))
+        {
+            fprintf(stderr, "failed to chdir: %s\n", cwd.c_str());
+        }
+    }
+}
+
 int main(int argc, char* argv[])
 {
     CTinyIni cfg;
     cfg.ParseCli(argc, argv);
+    CheckChdir(cfg);
 
     std::string strExeName = program_invocation_short_name;
     std::string strIniFile = strExeName + ".ini";
@@ -36,6 +51,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "load config: %s\n", strIniFile.c_str());
         CTinyIni iniTemp;
         iniTemp.LoadIni(strIniFile);
+        CheckChdir(iniTemp);
         cfg.Merge(iniTemp);
     }
 
