@@ -25,6 +25,7 @@ add_library(couttast STATIC
     src/tinyini.cpp
     src/file-compare.cpp
     src/test-reader.cpp
+    src/systemtast.cpp
     #src/tast_drive.cpp
     #src/tinytast.cpp
 )
@@ -46,6 +47,7 @@ add_executable(utCoutTast
     utest/test-tinytast.cpp
     utest/test-file-compare.cpp
     utest/test-classtast.cpp
+    utest/test-systemtast.cpp
 )
 
 target_link_libraries(utCoutTast
@@ -87,6 +89,7 @@ set(COUTTAST_HEADER
     include/logprint.hpp
     include/tast_util.hpp
     include/private-access.hpp
+    include/classtast.hpp
     #include/tinyini.h
 )
 

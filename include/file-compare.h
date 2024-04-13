@@ -14,10 +14,10 @@ namespace tast
 namespace macro
 {
 
-/// Implement COUT(file)
+/// Implement COUT_FILE(file)
 bool cout_file(const tast::CLocation& location, const std::string& file);
 
-/// Implement COUT(file, expect)
+/// Implement COUT_FILE(file, expect)
 bool cout_file(const tast::CLocation& location, const std::string& file, const std::string& expect);
 
 }
