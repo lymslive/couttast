@@ -105,27 +105,28 @@ struct CTastMgr; // forward declaration
 /// Abstract base class for a test case.
 struct CTastCase
 {
+    std::string m_name;        //< the name of test case.
     std::string m_description; //< one line description for test case.
     std::string m_file;        //< file name where defined the test case.
     int m_line;                //< line number within file where defined.
     bool m_autoRun;            //< can auto run without cli argument.
 
-    CTastCase() :/*m_description(desc), m_file(file),*/ m_line(0), m_autoRun(true) {}
+    CTastCase() : m_line(0), m_autoRun(true) {}
     virtual ~CTastCase() {}
-    void ctor(const std::string& desc, const std::string& file, int line, bool autoRun = true)
+    void ctor(const char* name, const char* desc, const char* file, int line, bool autoRun = true)
     {
+        m_name = name;
         m_description = desc;
         m_file = file;
         m_line = line;
         m_autoRun = autoRun;
     }
     virtual void help(std::string& output) const { output =  m_description; }
-
     virtual void run() = 0;
 
-    std::string List(const std::string& prefix, bool full = false)
+    std::string List(bool full = false)
     {
-        std::string line(prefix);
+        std::string line(m_name);
         if (!full)
         {
             line.append(m_autoRun ? "" : "*");
@@ -142,11 +143,24 @@ struct CTastCase
     }
 };
 
+inline
+CTastCase* FindTastCase(const std::vector<CTastCase*>& tastList, const std::string& name)
+{
+    for (std::vector<CTastCase*>::const_iterator it = tastList.begin(); it != tastList.end(); ++it)
+    {
+        if (*it != NULL && (*it)->m_name == name)
+        {
+            return *it;
+        }
+    }
+    return NULL;
+}
+
 /// Manage the collection of test cases.
 class CTastMgr : public CTinyCli
 {
-    std::map<std::string, CTastCase*> m_mapTastCase; // all test case by name
-    std::vector<std::string> m_listFail; //< failed test case name
+    std::vector<CTastCase*> m_vecTastCase; //< all test case
+    std::vector<std::string> m_listFail;   //< failed test case name
     int64_t m_beginTime; //< case begin time in microsecond
     int64_t m_endTime;   //< case end time in microsecond
     int m_currentFail;   //< count of failed statement in current test case
@@ -172,18 +186,17 @@ public: // constructor
 
     ~CTastMgr()
     {
-        for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
+        for (std::vector<CTastCase*>::iterator it = m_vecTastCase.begin(); it != m_vecTastCase.end(); ++it)
         {
-            if (it->second)
+            if (*it != NULL)
             {
-                delete it->second;
-                it->second = NULL;
+                delete *it;
+                *it = NULL;
             }
         }
     }
 
-    const std::map<std::string, CTastCase*>& GetTastCase() const
-    { return m_mapTastCase; }
+    const std::vector<CTastCase*>& GetTastList() const { return m_vecTastCase; }
 
 public: // output
     void CoutEnable (int bit) { m_coutMask = m_coutMask | bit; }
@@ -233,16 +246,10 @@ public: // output
 
 public: // how to run tast
 
-    void AddTast(const std::string& name, CTastCase* instance)
+    void AddTast(CTastCase* instance)
     {
-        if (!instance)
-        {
-            return;
-        }
-        if (m_mapTastCase.find(name) == m_mapTastCase.end())
-        {
-            m_mapTastCase[name] = instance;
-        }
+        if (!instance) { return; }
+        m_vecTastCase.push_back(instance);
     }
 
     static const char* pass_case(bool tf)
@@ -299,21 +306,20 @@ public: // how to run tast
         return m_failedCase;
     }
 
-    // run a tast case with name.
-    void RunTast(const std::string& name, CTastCase* pTastCase, bool bOnlyAuto = false)
+    void RunTast(CTastCase* pTastCase, bool bOnlyAuto = false)
     {
         if (!pTastCase) { return; }
         if (bOnlyAuto && !pTastCase->m_autoRun) { return; }
 
-        PreRunTast(name);
+        PreRunTast(pTastCase->m_name);
         pTastCase->run();
-        PostRunTast(name);
+        PostRunTast(pTastCase->m_name);
     }
 
     int64_t TimeTast(const std::string& name, int times = 10, int msleep = 1000)
     {
-        std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.find(name);
-        if (it == m_mapTastCase.end()) { return 0; }
+        CTastCase* pTastCase = FindTastCase(m_vecTastCase, name);
+        if (pTastCase == NULL) { return 0; }
         Print(COUT_BIT_HEAD, "## time %s() with %d runs", name.c_str(), times);
         int64_t beginTimeSave = m_beginTime;
         int64_t endTimeSave = m_endTime;
@@ -321,7 +327,7 @@ public: // how to run tast
         for (int i = 0; i < times; ++i)
         {
             SetBeginTime();
-            it->second->run();
+            pTastCase->run();
             int64_t passTime = SetEndTime();
             timeTotal += passTime;
             if (msleep > 0)
@@ -339,14 +345,14 @@ public: // how to run tast
 
 public: // what tast to run
 
-    // run test cases defined in `file` after `line`.
+    // run test cases defined in or match `file` after `line`.
     void RunTast(const std::string& file, int line)
     {
-        for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
+        for (std::vector<CTastCase*>::iterator it = m_vecTastCase.begin(); it != m_vecTastCase.end(); ++it)
         {
-            if (it->second != NULL && it->second->m_file.find(file) != std::string::npos && it->second->m_line >= line)
+            if (*it != NULL && (*it)->m_file.find(file) != std::string::npos && (*it)->m_line >= line)
             {
-                RunTast(it->first, it->second);
+                RunTast(*it);
             }
         }
     }
@@ -356,33 +362,33 @@ public: // what tast to run
     {
         if (name.empty()) { return; }
 
-        std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.find(name);
-        if (it != m_mapTastCase.end())
+        size_t idot = name.rfind(".cpp");
+        if (idot != std::string::npos)
         {
-            return RunTast(name, it->second);
+            std::string file = name.substr(0, idot + 4);
+            int line = 0;
+            size_t icolon = name.rfind(":");
+            if (icolon != std::string::npos)
+            {
+                line = atoi(name.c_str() + icolon + 1);
+            }
+            return RunTast(file, line);
         }
-        else
-        {
-            size_t idot = name.rfind(".cpp");
-            if (idot != std::string::npos)
-            {
-                std::string file = name.substr(0, idot + 4);
-                int line = 0;
-                size_t icolon = name.rfind(":");
-                if (icolon != std::string::npos)
-                {
-                    line = atoi(name.c_str() + icolon + 1);
-                }
-                return RunTast(file, line);
-            }
 
-            for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
+        std::vector<CTastCase*> filter;
+        for (std::vector<CTastCase*>::iterator it = m_vecTastCase.begin(); it != m_vecTastCase.end(); ++it)
+        {
+            if (*it == NULL) { return; }
+            if ((*it)->m_name == name) { return RunTast(*it); }
+            if ((*it)->m_name.find(name) != std::string::npos)
             {
-                if (it->first.find(name) != std::string::npos)
-                {
-                    RunTast(it->first, it->second);
-                }
+                filter.push_back(*it);
             }
+        }
+
+        for (std::vector<CTastCase*>::iterator it = filter.begin(); it != filter.end(); ++it)
+        {
+            RunTast(*it);
         }
     }
 
@@ -406,9 +412,9 @@ public: // what tast to run
         }
         else
         {
-            for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end(); ++it)
+            for (std::vector<CTastCase*>::iterator it = m_vecTastCase.begin(); it != m_vecTastCase.end(); ++it)
             {
-                RunTast(it->first, it->second, true);
+                RunTast(*it, true);
             }
         }
         return Summary();
@@ -424,9 +430,9 @@ public: // what tast to run
 public: // overview tast
     int ListCase(bool bTable) // no const as below c++11 there in no cbegin()
     {
-        for (std::map<std::string, CTastCase*>::iterator it = m_mapTastCase.begin(); it != m_mapTastCase.end() && it->second != NULL; ++it)
+        for (std::vector<CTastCase*>::iterator it = m_vecTastCase.begin(); it != m_vecTastCase.end(); ++it)
         {
-            Print(it->second->List(it->first, bTable).c_str());
+            Print((*it)->List(bTable).c_str());
         }
         return 0;
     }
@@ -445,13 +451,13 @@ public: // overview tast
 template <typename T>
 struct CTastBuilder
 {
-    CTastBuilder(const std::string& name, const char* file, int line, bool autoRun, const std::string& desc = "")
+    CTastBuilder(const char* name, const char* file, int line, bool autoRun, const char* desc = "")
     {
         const char* slash = strrchr(file, '/');
         file = slash ? slash + 1 : file;
         T* instance = new T();
-        instance->ctor(desc, file, line, autoRun);
-        CTastMgr::GetInstance()->AddTast(name, instance);
+        instance->ctor(name, desc, file, line, autoRun);
+        CTastMgr::GetInstance()->AddTast(instance);
     }
 };
 

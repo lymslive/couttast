@@ -6,9 +6,14 @@
 
 struct CTastSample : public tast::CTastCase
 {
-    CTastSample(tast::CTastMgr* pTastMgr, const std::string& desc, const std::string& file, int line, bool autoRun = true)
+    CTastSample(const char* name, const char* desc, const char* file, int line, bool autoRun = true)
     {
-        ctor(desc, file, line, autoRun);
+        ctor(name, desc, file, line, autoRun);
+    }
+
+    CTastSample(const std::string& name, const std::string& desc, const std::string& file, int line, bool autoRun = true)
+    {
+        ctor(name.c_str(), desc.c_str(), file.c_str(), line, autoRun);
     }
 
     virtual void run() override
@@ -57,8 +62,8 @@ void FillSampleTast(tast::CTastMgr& stTastMgr, int nCount, const char* prefix)
         int line = 10 * (i%10) + 1;
         bool autoRun = ((i+1)%10 != 0);
 
-        tast::CTastCase* pTastCase = new CTastSample(&stTastMgr, desc, file, line, autoRun);
-        stTastMgr.AddTast(name, pTastCase);
+        tast::CTastCase* pTastCase = new CTastSample(name, desc, file, line, autoRun);
+        stTastMgr.AddTast(pTastCase);
     }
 }
 

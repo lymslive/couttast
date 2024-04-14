@@ -14,7 +14,7 @@ struct CTastAgent
     CTinyIni* w_pConfig = nullptr;     //< Cli arguments merged by ini.
     const char* w_pFirstArg = nullptr; //< First cli argument.
     CTastConfig m_config;              //< Parsed config argument.
-    TastList m_vecTastCase;            //< Filtered test case list.
+    TastList m_tastList;            //< Filtered test case list.
 
     CTastAgent(CTastMgr& stTastMgr, CTinyIni& cfg, const char* firstArg)
         : w_pTastMgr(&stTastMgr), w_pConfig(&cfg), w_pFirstArg(firstArg)
@@ -48,15 +48,15 @@ public:
     /// Run test cases in multiple child process.
     int ProcessRun()
     {
-        return process_run(m_vecTastCase, m_config.job, w_pTastMgr);
+        return process_run(m_tastList, m_config.job, w_pTastMgr);
     }
 
     /// Filter test case in `w_pTastMgr`, saved in this `m_mapTastCase`.
     void Filter()
     {
-        if (m_vecTastCase.empty())
+        if (m_tastList.empty())
         {
-            filter_tast(w_pTastMgr->GetTastCase(), m_vecTastCase, m_config);
+            filter_tast(w_pTastMgr->GetTastList(), m_tastList, m_config);
         }
     }
 
@@ -94,15 +94,15 @@ bool CTastAgent::Help()
     int nTast = 0;
     std::string strTool;
     int nTool = 0;
-    for (auto& item : w_pTastMgr->GetTastCase())
+    for (auto& item : w_pTastMgr->GetTastList())
     {
-        if (item.second->m_autoRun)
+        if (item->m_autoRun)
         {
             if (nTast++ > 0)
             {
                 strTast.append(" ");
             }
-            strTast.append(item.first);
+            strTast.append(item->m_name);
         }
         else
         {
@@ -110,7 +110,7 @@ bool CTastAgent::Help()
             {
                 strTool.append(" ");
             }
-            strTool.append(item.first);
+            strTool.append(item->m_name);
         }
     }
 
@@ -133,23 +133,23 @@ bool CTastAgent::List(bool bTable)
         Filter();
     }
 
-    if (!m_vecTastCase.empty())
+    if (!m_tastList.empty())
     {
-        for (auto& item : m_vecTastCase)
+        for (auto& item : m_tastList)
         {
-            if (item.second != nullptr)
+            if (item != nullptr)
             {
-                w_pTastMgr->Print(item.second->List(item.first, bTable).c_str());
+                w_pTastMgr->Print(item->List(bTable).c_str());
             }
         }
     }
     else
     {
-        for (auto& item : w_pTastMgr->GetTastCase())
+        for (auto& item : w_pTastMgr->GetTastList())
         {
-            if (item.second != nullptr)
+            if (item != nullptr)
             {
-                w_pTastMgr->Print(item.second->List(item.first, bTable).c_str());
+                w_pTastMgr->Print(item->List(bTable).c_str());
             }
         }
     }
@@ -177,20 +177,13 @@ bool CTastAgent::ZeroMode(int& exitCode)
 
 bool CTastAgent::SubCommand(int& exitCode)
 {
-    if (w_pFirstArg == nullptr || w_pFirstArg[0] == '\0'
-            || w_pFirstArg[0] == '-' || w_pFirstArg[0] == '+')
+    if (w_pFirstArg == nullptr || w_pFirstArg[0] == '\0' || w_pFirstArg[0] == '-' || w_pFirstArg[0] == '+')
     {
         return false;
     }
 
-    auto it = w_pTastMgr->GetTastCase().find(w_pFirstArg);
-    if (it == w_pTastMgr->GetTastCase().end())
-    {
-        return false;
-    }
-
-    // not tool
-    if (it->second->m_autoRun)
+    CTastCase* item = FindTastCase(w_pTastMgr->GetTastList(), w_pFirstArg);
+    if (item == nullptr || item->m_autoRun)
     {
         return false;
     }
@@ -199,7 +192,7 @@ bool CTastAgent::SubCommand(int& exitCode)
     if (m_config.help > 0)
     {
         std::string output;
-        it->second->help(output);
+        item->help(output);
         w_pTastMgr->Print(output.c_str());
         return true;;
     }
@@ -211,7 +204,7 @@ bool CTastAgent::SubCommand(int& exitCode)
     w_pTastMgr->CoutDisable(COUT_BIT_FOOT);
     w_pTastMgr->CoutDisable(COUT_BIT_LINE);
     w_pTastMgr->CoutDisable(COUT_BIT_LAST);
-    w_pTastMgr->RunTast(it->first, it->second);
+    w_pTastMgr->RunTast(item);
 
     // not set exitCode, let it default to 0.
     return true;
@@ -219,18 +212,18 @@ bool CTastAgent::SubCommand(int& exitCode)
 
 int CTastAgent::LocalRun()
 {
-    for (auto& item : m_vecTastCase)
+    for (auto& item : m_tastList)
     {
-        w_pTastMgr->RunTast(item.first, item.second);
+        w_pTastMgr->RunTast(item);
     }
 
     int failed = w_pTastMgr->Summary();
     if (failed != 0 && m_config.random)
     {
         std::string order("-- random:");
-        for (auto& item : m_vecTastCase)
+        for (auto& item : m_tastList)
         {
-            order.append(" ").append(item.first);
+            order.append(" ").append(item->m_name);
         }
         if (w_pTastMgr->CoutMask(COUT_BIT_DESC))
         {
@@ -256,7 +249,7 @@ int CTastAgent::Run()
         w_pTastMgr->SetPrint(colour_print);
     }
 
-    if (m_config.job >= 0 && m_vecTastCase.size() >= MINLIST_TO_PROCESS)
+    if (m_config.job >= 0 && m_tastList.size() >= MINLIST_TO_PROCESS)
     {
         return ProcessRun();
     }

@@ -121,7 +121,7 @@ struct CProcessWork
         m_tastList = w_tastList;
         auto comp = [&presult](const TastEntry& a, const TastEntry& b)
         {
-            return presult.GetRuntime(a.first) <= presult.GetRuntime(b.first);
+            return presult.GetRuntime(a->m_name) <= presult.GetRuntime(b->m_name);
         };
         std::sort(m_tastList.begin(), m_tastList.end(), comp);
 
@@ -173,7 +173,7 @@ struct CProcessWork
         for (int i = range.first; i < range.second; ++i)
         {
             auto& item = tastList[i];
-            w_tastMgr.RunTast(item.first, item.second);
+            w_tastMgr.RunTast(item);
         }
     }
 
@@ -287,7 +287,7 @@ struct CProcessWork
 
             for (int j = range.first; j < range.second; ++j)
             {
-                order.append(" ").append(tastList[j].first);
+                order.append(" ").append(tastList[j]->m_name);
             }
 
             if (!output.empty())
@@ -365,16 +365,6 @@ int process_run(const TastList& tastList, int workers, CTastMgr* pTastMgr)
     CProcessWork work(tastList, workers, *pTastMgr);
 
     return work.ForkRun();
-}
-
-int process_run(const TastMap& tastMap, int workers, CTastMgr* pTastMgr)
-{
-    TastList tastList;
-    for (auto& item : tastMap)
-    {
-        tastList.push_back(item);
-    }
-    return process_run(tastList, workers, pTastMgr);
 }
 
 } // end of namespace tast

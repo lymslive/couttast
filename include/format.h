@@ -16,8 +16,7 @@ namespace tast
 {
 
 /// Type of container for test case.
-typedef std::map<std::string, CTastCase*> TastMap;
-typedef std::pair<std::string, CTastCase*> TastEntry;
+typedef CTastCase* TastEntry;
 typedef std::vector<TastEntry> TastList;
 
 /// Supported config information from cli or ini.

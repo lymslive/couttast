@@ -26,12 +26,6 @@ const int MINLIST_TO_PROCESS = 8;
  * */
 int process_run(const TastList& tastList, int workers, CTastMgr* pTastMgr = nullptr);
 
-/** Run all test cases in multiple process.
- * The `tastMap` is linearize to `tastList` first, and call the previous
- * overload function.
- * */
-int process_run(const TastMap& tastMap, int workers, CTastMgr* pTastMgr = nullptr);
-
 } // end of namespace tast
 
 
