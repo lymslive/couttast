@@ -88,6 +88,8 @@ DEF_TAST(xml_diff, "read xml, transform, write back and compare diff")
 
 bool FnTestCallback(CTestData& test)
 {
+    // ignore test case with command, which is handled by other methods.
+    // in read xml file, it's better not mix these types of test cases.
     if (test.command != nullptr)
     {
         return true;
