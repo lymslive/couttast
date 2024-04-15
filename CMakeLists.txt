@@ -24,7 +24,7 @@ add_library(couttast STATIC
     src/parallel.cpp
     src/tinyini.cpp
     src/file-compare.cpp
-    src/test-reader.cpp
+    src/xmltast.cpp
     src/systemtast.cpp
     #src/tast_drive.cpp
     #src/tinytast.cpp

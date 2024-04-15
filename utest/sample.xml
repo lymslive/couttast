@@ -21,4 +21,17 @@
       BBBBBBBBBB.
     </expect>
   </testcase>
+  <testcase id="S1" description="system shell command">
+    <command>
+      ls test-systemtast.cpp | wc -l
+    </command>
+    <expect>
+      1
+    </expect>
+  </testcase>
+  <testcase id="S2" description="system shell bad command">
+    <command exitCode="2">
+      ls nofile.null
+    </command>
+  </testcase>
 </xml>
