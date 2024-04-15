@@ -2,6 +2,8 @@
 #include "agent.h"
 #include "extra-macros.hpp"
 
+#include <unistd.h>
+
 struct CTastSample : public tast::CTastCase
 {
     CTastSample(tast::CTastMgr* pTastMgr, const std::string& desc, const std::string& file, int line, bool autoRun = true)
@@ -78,4 +80,11 @@ DEF_TOOL(avg_fun_long, "test average time of function, may long time")
     us = tast::average_time(RandSleep, 100, 0);
     COUT(us);
     COUT(1.0 * us / (125 * 1000), 1.0, 0.1);
+}
+
+DEF_TOOL(arg_cwd, "test --cwd to change current working directory")
+{
+    char* cwd = ::get_current_dir_name();
+    COUT(cwd);
+    ::free(cwd);
 }
