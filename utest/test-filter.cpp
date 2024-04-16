@@ -14,7 +14,7 @@ std::ostream& operator<<(std::ostream& os, const tast::TastEntry& tast)
 
 DEF_TAST(filter_basic, "test filter by [+]name and -name")
 {
-    tast::CTastMgr stTastMgr;
+    mock::CTastMgr stTastMgr;
     FillSampleTast(stTastMgr, 20, "ft");
     FillSampleTast(stTastMgr, 20, "mp");
     FillSampleTast(stTastMgr, 20, "sp");
@@ -179,7 +179,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
 
 DEF_TAST(filter_overlap, "test filter when one test name is substr of another")
 {
-    tast::CTastMgr stTastMgr;
+    mock::CTastMgr stTastMgr;
     FillSampleTast(stTastMgr, 20, "mp");
     FillSampleTast(stTastMgr, 20, "longmp");
     FillSampleTast(stTastMgr, 20, "sp");
@@ -230,7 +230,7 @@ DEF_TAST(filter_overlap, "test filter when one test name is substr of another")
 
 DEF_TAST(filter_random, "test filter with --random")
 {
-    tast::CTastMgr stTastMgr;
+    mock::CTastMgr stTastMgr;
     FillSampleTast(stTastMgr, 20);
 
     tast::TastList tastCaseAll;

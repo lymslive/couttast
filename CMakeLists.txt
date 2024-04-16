@@ -38,6 +38,7 @@ target_link_libraries(tast_drive
 
 # An unittest program to test libcouttast.a itself.
 add_executable(utCoutTast
+    utest/mock-tastmgr.cpp
     utest/test-agent.cpp
     utest/test-exception.cpp
     utest/test-filter.cpp

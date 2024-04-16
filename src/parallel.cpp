@@ -121,6 +121,7 @@ struct CProcessWork
         m_tastList = w_tastList;
         auto comp = [&presult](const TastEntry& a, const TastEntry& b)
         {
+            // fixme: construct std::string each time
             return presult.GetRuntime(a->m_name) <= presult.GetRuntime(b->m_name);
         };
         std::sort(m_tastList.begin(), m_tastList.end(), comp);
@@ -355,6 +356,7 @@ struct CProcessWork
     }
 };
 
+// fixme: maybe no need const, reorder tastList in place
 int process_run(const TastList& tastList, int workers, CTastMgr* pTastMgr)
 {
     if (pTastMgr == nullptr)

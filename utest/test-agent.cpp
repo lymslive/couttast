@@ -40,7 +40,7 @@ void RandError(int percent)
     CTastSample::randError = percent;
 }
 
-void FillSampleTast(tast::CTastMgr& stTastMgr, int nCount, const char* prefix)
+void FillSampleTast(mock::CTastMgr& stTastMgr, int nCount, const char* prefix)
 {
     if (prefix == nullptr || prefix[0] == '\0')
     {
@@ -62,7 +62,11 @@ void FillSampleTast(tast::CTastMgr& stTastMgr, int nCount, const char* prefix)
         int line = 10 * (i%10) + 1;
         bool autoRun = ((i+1)%10 != 0);
 
-        tast::CTastCase* pTastCase = new CTastSample(name, desc, file, line, autoRun);
+        const char* pszName = stTastMgr.SaveName(name);
+        const char* pszDesc = stTastMgr.SaveName(desc);
+        const char* pszFile = stTastMgr.SaveName(file);
+        // tast::CTastCase* pTastCase = new CTastSample(name, desc, file, line, autoRun);
+        tast::CTastCase* pTastCase = new CTastSample(pszName, pszDesc, pszFile, line, autoRun);
         stTastMgr.AddTast(pTastCase);
     }
 }

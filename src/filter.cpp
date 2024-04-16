@@ -23,29 +23,35 @@ struct CFilterTast
     {}
 
     static
-    bool MatchWild(const std::string& name, const std::string& arg, char wild)
+    bool MatchWild(const char* name, const std::string& arg, char wild)
     {
+        const char* find = ::strstr(name, arg.c_str());
         if (wild == '%')
         {
-            return name.find(arg) != std::string::npos;
+            return find != nullptr;
         }
         else if (wild == '^')
         {
-            return name.find(arg) == 0;
+            return find == name;
         }
         else if (wild == '$')
         {
-            return name.rfind(arg) == name.size() - arg.size();
+            // refer MatchEnd
         }
         return false;
+    }
+
+    static
+    bool MatchEnd(const char* name, int nameLen, const std::string& arg)
+    {
+        return nameLen >= arg.size() && 0 == ::memcmp(name + nameLen - arg.size(), arg.c_str(), arg.size());
     }
 
     static
     bool MatchArg(const std::string& arg, const TastEntry& item)
     {
         // full match name
-        const std::string& name = item->m_name;
-        if (name == arg)
+        if (item->m_nameLen == arg.size() && ::memcmp(item->m_name, arg.c_str(), arg.size()))
         {
             return true;
         }
@@ -62,12 +68,15 @@ struct CFilterTast
                 line = atoi(arg.c_str() + icolon + 1);
             }
             return (item != nullptr
-                    && item->m_file.find(file) != std::string::npos
+                    && item->m_fileLen >= file.size()
+                    && ::strstr(item->m_file, file.c_str()) != NULL
                     && item->m_line >= line);
         }
 
         // match wild ^$*
         size_t iend = arg.size() - 1;
+        const char* name = item->m_name;
+        int nameLen = item->m_nameLen;
         if (arg.size() == 1)
         {
             return MatchWild(name, arg, '^');
@@ -82,11 +91,11 @@ struct CFilterTast
         }
         else if (arg[iend] == '$')
         {
-            return MatchWild(name, arg.substr(0, iend), '$');
+            return MatchEnd(name, nameLen, arg.substr(0, iend));
         }
         else if (arg[0] == '*')
         {
-            return MatchWild(name, arg.substr(1), '$');
+            return MatchEnd(name, nameLen, arg.substr(1));
         }
         else
         {
@@ -150,6 +159,7 @@ struct CFilterTast
             }
         }
 
+        // fixme: remove this liner scan
         const TastEntry item = FindTastCase(input, arg);
         if (item != nullptr)
         {
