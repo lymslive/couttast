@@ -36,11 +36,10 @@ void CTestData::clear()
 
 /* ---------------------------------------------------------------------- */
 
-class CTestReaderImpl
+class CTestReader::Impl
 {
 public:
-    CTestReaderImpl(const char* inputFile)
-        : m_fileName(inputFile), m_stream(inputFile)
+    Impl(const char* inputFile) : m_fileName(inputFile), m_stream(inputFile)
     {}
 
     bool NextTest(CTestData& test);
@@ -57,7 +56,7 @@ private:
     std::ifstream m_stream;
 };
 
-bool CTestReaderImpl::NextTest(CTestData& test)
+bool CTestReader::Impl::NextTest(CTestData& test)
 {
     test.clear();
     std::string line;
@@ -80,7 +79,7 @@ bool CTestReaderImpl::NextTest(CTestData& test)
     return false; // End of file or error
 }
 
-bool CTestReaderImpl::ExtractTest(CTestData& test, std::stringstream& stream)
+bool CTestReader::Impl::ExtractTest(CTestData& test, std::stringstream& stream)
 {
     bool found = false;
     std::string line;
@@ -132,7 +131,7 @@ bool CTestReaderImpl::ExtractTest(CTestData& test, std::stringstream& stream)
     return found;
 }
 
-std::string CTestReaderImpl::ExtractAttribute(const std::string& line, const std::string& attr)
+std::string CTestReader::Impl::ExtractAttribute(const std::string& line, const std::string& attr)
 {
     std::string result;
     size_t pos = line.find(attr + "=\"");
@@ -148,7 +147,7 @@ std::string CTestReaderImpl::ExtractAttribute(const std::string& line, const std
     return result;
 }
 
-std::string CTestReaderImpl::ExtractContent(std::stringstream& stream, const std::string& tag)
+std::string CTestReader::Impl::ExtractContent(std::stringstream& stream, const std::string& tag)
 {
     std::string content;
     std::string line;
@@ -176,8 +175,7 @@ std::string CTestReaderImpl::ExtractContent(std::stringstream& stream, const std
 
 /* ---------------------------------------------------------------------- */
 
-CTestReader::CTestReader(const char* inputFile)
-    : m_pImpl(new CTestReaderImpl(inputFile))
+CTestReader::CTestReader(const char* inputFile) : m_pImpl(new Impl(inputFile))
 {
 }
 
@@ -285,11 +283,11 @@ int CTestReader::TestCommand()
 
 /* ---------------------------------------------------------------------- */
 
-class CTestWriterImpl
+class CTestWriter::Impl
 {
 public:
-    CTestWriterImpl(const char* outputFile);
-    ~CTestWriterImpl();
+    Impl(const char* outputFile);
+    ~Impl();
 
     void WriteTest(const CTestData& test, const std::string* output = nullptr);
     void Close();
@@ -299,13 +297,13 @@ private:
     std::ofstream m_stream;
 };
 
-CTestWriterImpl::CTestWriterImpl(const char* outputFile)
+CTestWriter::Impl::Impl(const char* outputFile)
     : m_fileName(outputFile), m_stream(outputFile)
 {
     m_stream << "<xml>\n";
 }
 
-CTestWriterImpl::~CTestWriterImpl()
+CTestWriter::Impl::~Impl()
 {
     if (m_stream.is_open())
     {
@@ -313,7 +311,7 @@ CTestWriterImpl::~CTestWriterImpl()
     }
 }
 
-void CTestWriterImpl::WriteTest(const CTestData& test, const std::string* output)
+void CTestWriter::Impl::WriteTest(const CTestData& test, const std::string* output)
 {
     m_stream << "  <testcase id=\""
         << test.id << "\" description=\""
@@ -373,7 +371,7 @@ void CTestWriterImpl::WriteTest(const CTestData& test, const std::string* output
     m_stream << "  </testcase>\n";
 }
 
-void CTestWriterImpl::Close()
+void CTestWriter::Impl::Close()
 {
     m_stream << "</xml>\n";
     m_stream.close();
@@ -381,8 +379,7 @@ void CTestWriterImpl::Close()
 
 /* ---------------------------------------------------------------------- */
 
-CTestWriter::CTestWriter(const char* outputFile)
-    : m_pImpl(new CTestWriterImpl(outputFile))
+CTestWriter::CTestWriter(const char* outputFile) : m_pImpl(new Impl(outputFile))
 {
 }
 

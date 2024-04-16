@@ -74,8 +74,6 @@ struct CTestData
 /// Argument `CTestData` is mutable, can directly consume the content for efficiency.
 typedef std::function<bool(CTestData& test)> FnTest;
 
-class CTestReaderImpl;
-
 /// Parser reader for a file with a list of test case.
 class CTestReader
 {
@@ -95,10 +93,9 @@ public:
     int TestRun(FnTest fn);
 
 private:
-    CTestReaderImpl* m_pImpl = nullptr;
+    class Impl;
+    Impl* m_pImpl = nullptr;
 };    
-
-class CTestWriterImpl;
 
 /// Write back a list test case to another xml file.
 class CTestWriter
@@ -116,7 +113,8 @@ public:
     void Close();
 
 private:
-    CTestWriterImpl* m_pImpl = nullptr;
+    class Impl;
+    Impl* m_pImpl = nullptr;
 };
 
 }
