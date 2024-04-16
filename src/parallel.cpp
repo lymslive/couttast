@@ -122,7 +122,7 @@ struct CProcessWork
         auto comp = [&presult](const TastEntry& a, const TastEntry& b)
         {
             // fixme: construct std::string each time
-            return presult.GetRuntime(a->m_name) <= presult.GetRuntime(b->m_name);
+            return presult.GetRuntime(a->m_name) < presult.GetRuntime(b->m_name);
         };
         std::sort(m_tastList.begin(), m_tastList.end(), comp);
 
