@@ -2,6 +2,7 @@
 
 #include <random>
 #include <algorithm>
+#include <unordered_set>
 
 namespace tast
 {
@@ -9,16 +10,16 @@ namespace tast
 /// Functor to filter input to output by config.
 struct CFilterTast
 {
-    const TastList& input;          //< input test case collection
+    const TastPool& input;          //< input test case collection
     TastList& output;               //< output test case list
     const CTastConfig& config;      //< the parsed config from cli
-    std::set<TastEntry> keys;       //< alread outputed test case
+    std::unordered_set<TastEntry> keys; //< alread outputed test case
 
     std::vector<std::string> subs;  //< arguments to subtract cases -xxx
     bool optAll = false;            //< --all
     bool optNoTool = false;         //< --notool
 
-    CFilterTast(const TastList& pool, TastList& filter, const CTastConfig& config_in)
+    CFilterTast(const TastPool& pool, TastList& filter, const CTastConfig& config_in)
         : input(pool), output(filter), config(config_in)
     {}
 
@@ -48,12 +49,12 @@ struct CFilterTast
     }
 
     static
-    bool MatchArg(const std::string& arg, const TastEntry& item)
+    char MatchArg(const std::string& arg, TastEntry item)
     {
         // full match name
-        if (item->m_nameLen == arg.size() && ::memcmp(item->m_name, arg.c_str(), arg.size()))
+        if (item->EqualName(arg))
         {
-            return true;
+            return '=';
         }
 
         // match file:line
@@ -67,10 +68,7 @@ struct CFilterTast
             {
                 line = atoi(arg.c_str() + icolon + 1);
             }
-            return (item != nullptr
-                    && item->m_fileLen >= file.size()
-                    && ::strstr(item->m_file, file.c_str()) != NULL
-                    && item->m_line >= line);
+            return (item->MatchFile(file, line) ? 'f' : 0);
         }
 
         // match wild ^$*
@@ -79,33 +77,33 @@ struct CFilterTast
         int nameLen = item->m_nameLen;
         if (arg.size() == 1)
         {
-            return MatchWild(name, arg, '^');
+            return MatchWild(name, arg, '^') ? '^' : 0;
         }
         else if (arg[0] == '^')
         {
-            return MatchWild(name, arg.substr(1), '^');
+            return MatchWild(name, arg.substr(1), '^') ? '^' : 0;
         }
         else if (arg[iend] == '*')
         {
-            return MatchWild(name, arg.substr(0, iend), '^');
+            return MatchWild(name, arg.substr(0, iend), '^') ? '^' : 0;
         }
         else if (arg[iend] == '$')
         {
-            return MatchEnd(name, nameLen, arg.substr(0, iend));
+            return MatchEnd(name, nameLen, arg.substr(0, iend)) ? '$' : 0;
         }
         else if (arg[0] == '*')
         {
-            return MatchEnd(name, nameLen, arg.substr(1));
+            return MatchEnd(name, nameLen, arg.substr(1)) ? '$' : 0;
         }
         else
         {
-            return MatchWild(name, arg, '%');
+            return MatchWild(name, arg, '%') ? '%' : 0;
         }
 
-        return false;
+        return 0;
     }
 
-    bool MatchSub(const TastEntry& item)
+    bool MatchSub(TastEntry item)
     {
         for (auto& sub : config.subs)
         {
@@ -117,7 +115,7 @@ struct CFilterTast
         return false;
     }
 
-    void AddTast(const TastEntry& item)
+    void AddTast(TastEntry item)
     {
         if (item == nullptr)
         {
@@ -142,9 +140,9 @@ struct CFilterTast
     {
         for (auto& item : input)
         {
-            if (item != nullptr && (item->m_autoRun || config.all))
+            if (item.m_autoRun || config.all)
             {
-                AddTast(item);
+                AddTast(&item);
             }
         }
     }
@@ -159,20 +157,23 @@ struct CFilterTast
             }
         }
 
-        // fixme: remove this liner scan
-        const TastEntry item = FindTastCase(input, arg);
-        if (item != nullptr)
-        {
-            // only add full match if possible
-            return AddTast(item);
-        }
-
+        TastList filter;
         for (auto& item : input)
         {
-            if (MatchArg(arg, item))
+            char match = MatchArg(arg, &item);
+            if (match == '=')
             {
-                AddTast(item);
+                return AddTast(&item);
             }
+            else if (match != 0)
+            {
+                filter.push_back(&item);
+            }
+        }
+
+        for (auto& item : filter)
+        {
+            AddTast(item);
         }
     }
 
@@ -203,14 +204,14 @@ struct CFilterTast
 
 /* ---------------------------------------------------------------------- */
 
-void filter_tast(const TastList& tastInput, TastList& tastOutput, const CTinyIni& cli)
+void filter_tast(const TastPool& tastInput, TastList& tastOutput, const CTinyIni& cli)
 {
     CTastConfig cfg;
     cfg.ParseCli(cli);
     return filter_tast(tastInput, tastOutput, cfg);
 }
 
-void filter_tast(const TastList& tastInput, TastList& tastOutput, const CTastConfig& cfg)
+void filter_tast(const TastPool& tastInput, TastList& tastOutput, const CTastConfig& cfg)
 {
     if (tastInput.empty())
     {

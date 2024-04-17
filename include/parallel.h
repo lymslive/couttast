@@ -16,7 +16,7 @@ namespace tast
 const int MINLIST_TO_PROCESS = 8;
 
 /** Run a list of test cases in multiple process.
- * @param [IN] tastList, a ordered list of test cases to be run.
+ * @param [IN] tastList, a filtered list of test cases to be run.
  * @param [IN] workers, the count of child process to run those test cases.
  * @param [IN] point to test manager where to run the cases.
  * @details 
@@ -25,6 +25,10 @@ const int MINLIST_TO_PROCESS = 8;
  *  is default to the global `CTastMgr` instance.
  * */
 int process_run(const TastList& tastList, int workers, CTastMgr* pTastMgr = nullptr);
+
+/** Run all test cases from the test pool in multiple process.
+ * */
+int process_run(const TastPool& tastPool, int workers, CTastMgr* pTastMgr = nullptr);
 
 } // end of namespace tast
 

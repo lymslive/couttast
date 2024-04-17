@@ -29,7 +29,7 @@ DEF_TOOL(tinytast_sizeof, "view sizeof class in tast namespace")
     COUT(sizeof(CTinyCli));
     COUT(sizeof(CTastCase));
     COUT(sizeof(CTastMgr));
-    COUT(sizeof(CTastBuilder<int>));
+    COUT(sizeof(CTastBuilder));
     COUT(sizeof(CStatement));
 }
 

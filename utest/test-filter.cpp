@@ -25,7 +25,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         tast::CTinyIni cfg;
         cfg.m_mapOption["all"] = "--";
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 80);
         for (auto& item : tastCase)
         {
@@ -37,7 +37,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
     {
         tast::CTinyIni cfg;
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 72);
     }
 
@@ -46,7 +46,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("+");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 72);
     }
 
@@ -55,7 +55,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("mp");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 40);
     }
 
@@ -65,7 +65,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         cfg.m_vecArg.push_back("mp");
         cfg.m_vecArg.push_back("+sp");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 60);
     }
 
@@ -76,7 +76,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         cfg.m_vecArg.push_back("mp");
         cfg.m_vecArg.push_back("+sp");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 54);
     }
 
@@ -87,7 +87,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         cfg.m_mapOption["mp"] = "-";
         cfg.m_mapOption["sp"] = "-";
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 20);
     }
 
@@ -98,7 +98,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         cfg.m_mapOption["mp"] = "-";
         cfg.m_mapOption["s"] = "-";
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 40);
     }
 
@@ -107,7 +107,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("ft-1.cpp");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 10);
     }
 
@@ -116,7 +116,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("ft-1.cpp:50");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 5);
     }
 
@@ -125,7 +125,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("f");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 20);
     }
 
@@ -134,7 +134,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("^f");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 20);
     }
 
@@ -143,7 +143,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("ft*");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 20);
     }
 
@@ -152,7 +152,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("1$");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 8);
     }
 
@@ -161,7 +161,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("*1");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 8);
         COUT(tastCase);
     }
@@ -171,7 +171,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("*11");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 4);
         COUT(tastCase);
     }
@@ -189,7 +189,7 @@ DEF_TAST(filter_overlap, "test filter when one test name is substr of another")
         tast::CTinyIni cfg;
         cfg.m_mapOption["all"] = "--";
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 60);
         for (auto& item : tastCase)
         {
@@ -202,7 +202,7 @@ DEF_TAST(filter_overlap, "test filter when one test name is substr of another")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("+mp_case");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 40);
     }
 
@@ -211,7 +211,7 @@ DEF_TAST(filter_overlap, "test filter when one test name is substr of another")
         tast::CTinyIni cfg;
         cfg.m_vecArg.push_back("+mp_case_10");
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 1);
         COUT(tastCase);
     }
@@ -222,7 +222,7 @@ DEF_TAST(filter_overlap, "test filter when one test name is substr of another")
         cfg.m_vecArg.push_back("+mp_case_10");
         cfg.m_mapOption["notool"] = "--";
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 0);
         COUT(tastCase);
     }
@@ -239,7 +239,7 @@ DEF_TAST(filter_random, "test filter with --random")
         tast::CTinyIni cfg;
         cfg.m_mapOption["all"] = "--";
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 20);
         tastCaseAll.swap(tastCase);
     }
@@ -250,12 +250,12 @@ DEF_TAST(filter_random, "test filter with --random")
         tast::CTinyIni cfg;
         cfg.m_mapOption["all"] = "--";
         tast::TastList tastCase;
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCaseAll == tastCase, true);
 
         cfg.m_mapOption["random"] = "--";
         tastCase.clear();
-        tast::filter_tast(stTastMgr.GetTastList(), tastCase, cfg);
+        tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
         COUT(tastCase.size(), 20);
         for (auto& item : tastCase)
         {

@@ -30,7 +30,7 @@ DEF_TOOL(pal_process, "run in multi-process: --process=4 --case=100 --error=0")
     }
 
     TIME_TIC;
-    tast::process_run(stTastMgr.GetTastList(), nProcess);
+    tast::process_run(stTastMgr.GetTastPool(), nProcess);
     auto toc = TIME_TOC;
     COUT(toc);
     COUT(1.0 * toc / (100 * 100 * 1000 / nProcess), 1.0, 0.01);
@@ -106,7 +106,8 @@ DEF_TOOL(pal_presort, "test presort and partition: --random")
 
     mock::CTastMgr stTastMgr;
     FillSampleTast(stTastMgr, nCase, "mp");
-    const tast::TastList& tastList = stTastMgr.GetTastList();
+    const tast::TastPool& tastPool = stTastMgr.GetTastPool();
+    tast::TastList tastList = tast::MakeTastList(tastPool);
 
     // tast::CProcessWork work(tastList, nProcess, stTastMgr);
     tast::CProcessWork work(tastList, nProcess, *G_TASTMGR);

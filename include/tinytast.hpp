@@ -1,5 +1,5 @@
 // A very tiny unit test framework with single header even in C++98
-// lymslive @ 2023-06-17
+// lymslive @ 2023-06-17 2024-04-17
 #ifndef TINYTAST_HPP__
 #define TINYTAST_HPP__
 
@@ -100,23 +100,24 @@ const int COUT_MASK_ALL = 0xFFFF;
 const int COUT_MASK_FAIL = COUT_MASK_ALL & (~COUT_BIT_PASS);
 const int COUT_MASK_SILENT = COUT_BIT_FAIL | COUT_BIT_FOOT | COUT_BIT_LAST;
 
-struct CTastMgr; // forward declaration
+/// A test function type without any argument nor return value.
+typedef void (*voidfun_t)();
 
 /// Abstract base class for a test case.
 struct CTastCase
 {
+    voidfun_t   m_run;         //< the function to run test.
     const char* m_name;        //< the name of test case.
     const char* m_description; //< one line description for test case.
     const char* m_file;        //< file name where defined the test case.
-    short m_line;              //< line number within file where defined.
-    uint8_t m_nameLen;         //< the length of name, max 256.
-    uint8_t m_fileLen;         //< the length of file, max 256.
+    uint16_t m_line;           //< line number within file where defined.
+    uint8_t  m_nameLen;        //< the length of name, max 256.
+    uint8_t  m_fileLen;        //< the length of file, max 256.
     bool m_autoRun;            //< can auto run without cli argument.
 
-    CTastCase() : m_line(0), m_autoRun(true) {}
-    virtual ~CTastCase() {}
-    void ctor(const char* name, const char* desc, const char* file, int line, bool autoRun = true)
+    void ctor(voidfun_t run, const char* name, const char* desc, const char* file, int line, bool autoRun = true)
     {
+        m_run = run;
         m_name = name;
         m_description = desc;
         m_file = file;
@@ -125,10 +126,27 @@ struct CTastCase
         m_fileLen = ::strlen(file);
         m_autoRun = autoRun;
     }
-    virtual void help(std::string& output) const { output =  m_description; }
-    virtual void run() = 0;
 
-    std::string List(bool full = false)
+    bool EqualName(const std::string& name) const
+    {
+        return m_nameLen == name.size() && ::memcmp(m_name, name.c_str(), name.size()) == 0;
+    }
+
+    const char* MatchName(const std::string& name) const
+    {
+        if (m_nameLen < name.size())
+        {
+            return NULL;
+        }
+        return ::strstr(m_name, name.c_str());
+    }
+
+    bool MatchFile(const std::string& file, int line = 0) const
+    {
+        return m_fileLen >= file.size() && ::strstr(m_file, file.c_str()) != NULL && m_line >= line;
+    }
+
+    std::string List(bool full = false) const
     {
         std::string line(m_name);
         if (!full)
@@ -147,23 +165,10 @@ struct CTastCase
     }
 };
 
-inline
-CTastCase* FindTastCase(const std::vector<CTastCase*>& tastList, const std::string& name)
-{
-    for (std::vector<CTastCase*>::const_iterator it = tastList.begin(); it != tastList.end(); ++it)
-    {
-        if (*it != NULL && (*it)->m_nameLen == name.size() && 0 == ::memcmp((*it)->m_name, name.c_str(), name.size()))
-        {
-            return *it;
-        }
-    }
-    return NULL;
-}
-
 /// Manage the collection of test cases.
 class CTastMgr : public CTinyCli
 {
-    std::vector<CTastCase*> m_vecTastCase; //< all test case
+    std::vector<CTastCase> m_tastPool; //< all test case
     std::vector<const char*> m_listFail;   //< failed test case name
     int64_t m_beginTime; //< case begin time in microsecond
     int64_t m_endTime;   //< case end time in microsecond
@@ -186,21 +191,11 @@ public: // constructor
     CTastMgr() : m_beginTime(0), m_endTime(0),
         m_currentFail(0), m_passedCase(0), m_failedCase(0),
         m_coutMask(COUT_MASK_ALL), m_fnPrint(NULL)
-    {}
-
-    ~CTastMgr()
     {
-        for (std::vector<CTastCase*>::iterator it = m_vecTastCase.begin(); it != m_vecTastCase.end(); ++it)
-        {
-            if (*it != NULL)
-            {
-                delete *it;
-                *it = NULL;
-            }
-        }
+        m_tastPool.reserve(128);
     }
 
-    const std::vector<CTastCase*>& GetTastList() const { return m_vecTastCase; }
+    const std::vector<CTastCase>& GetTastPool() const { return m_tastPool; }
 
 public: // output
     void CoutEnable (int bit) { m_coutMask = m_coutMask | bit; }
@@ -250,10 +245,9 @@ public: // output
 
 public: // how to run tast
 
-    void AddTast(CTastCase* instance)
+    void AddTast(const CTastCase& instance)
     {
-        if (!instance) { return; }
-        m_vecTastCase.push_back(instance);
+        m_tastPool.push_back(instance);
     }
 
     static const char* pass_case(bool tf)
@@ -310,19 +304,30 @@ public: // how to run tast
         return m_failedCase;
     }
 
-    void RunTast(CTastCase* pTastCase, bool bOnlyAuto = false)
+    void RunTast(const CTastCase& tast, bool bOnlyAuto = false)
     {
-        if (!pTastCase) { return; }
-        if (bOnlyAuto && !pTastCase->m_autoRun) { return; }
+        if (bOnlyAuto && !tast.m_autoRun) { return; }
 
-        PreRunTast(pTastCase->m_name);
-        pTastCase->run();
-        PostRunTast(pTastCase->m_name);
+        PreRunTast(tast.m_name);
+        tast.m_run();
+        PostRunTast(tast.m_name);
+    }
+
+    CTastCase* FindTastCase(const std::string& name)
+    {
+        for (std::vector<CTastCase>::iterator it = m_tastPool.begin(); it != m_tastPool.end(); ++it)
+        {
+            if (it->EqualName(name))
+            {
+                return &(*it);
+            }
+        }
+        return NULL;
     }
 
     int64_t TimeTast(const std::string& name, int times = 10, int msleep = 1000)
     {
-        CTastCase* pTastCase = FindTastCase(m_vecTastCase, name);
+        CTastCase* pTastCase = FindTastCase(name);
         if (pTastCase == NULL) { return 0; }
         Print(COUT_BIT_HEAD, "## time %s() with %d runs", name.c_str(), times);
         int64_t beginTimeSave = m_beginTime;
@@ -331,7 +336,7 @@ public: // how to run tast
         for (int i = 0; i < times; ++i)
         {
             SetBeginTime();
-            pTastCase->run();
+            pTastCase->m_run();
             int64_t passTime = SetEndTime();
             timeTotal += passTime;
             if (msleep > 0)
@@ -352,12 +357,9 @@ public: // what tast to run
     // run test cases defined in or match `file` after `line`.
     void RunTast(const std::string& file, int line)
     {
-        for (std::vector<CTastCase*>::iterator it = m_vecTastCase.begin(); it != m_vecTastCase.end(); ++it)
+        for (std::vector<CTastCase>::iterator it = m_tastPool.begin(); it != m_tastPool.end(); ++it)
         {
-            if (*it != NULL
-                    && (*it)->m_fileLen >= file.size()
-                    && ::strstr((*it)->m_file, file.c_str()) != NULL
-                    && (*it)->m_line >= line)
+            if (it->MatchFile(file, line))
             {
                 RunTast(*it);
             }
@@ -383,24 +385,21 @@ public: // what tast to run
         }
 
         std::vector<CTastCase*> filter;
-        for (std::vector<CTastCase*>::iterator it = m_vecTastCase.begin(); it != m_vecTastCase.end(); ++it)
+        for (std::vector<CTastCase>::iterator it = m_tastPool.begin(); it != m_tastPool.end(); ++it)
         {
-            if (*it == NULL) { return; }
-            if ((*it)->m_nameLen == name.size()
-                    && 0 == ::memcmp((*it)->m_name, name.c_str(), name.size()))
+            if (it->EqualName(name))
             {
                 return RunTast(*it);
             }
-            if ((*it)->m_nameLen > name.size()
-                    && ::strstr((*it)->m_name, name.c_str()) != NULL)
+            if (it->MatchName(name))
             {
-                filter.push_back(*it);
+                filter.push_back(&(*it));
             }
         }
 
         for (std::vector<CTastCase*>::iterator it = filter.begin(); it != filter.end(); ++it)
         {
-            RunTast(*it);
+            RunTast(*(*it));
         }
     }
 
@@ -424,7 +423,7 @@ public: // what tast to run
         }
         else
         {
-            for (std::vector<CTastCase*>::iterator it = m_vecTastCase.begin(); it != m_vecTastCase.end(); ++it)
+            for (std::vector<CTastCase>::iterator it = m_tastPool.begin(); it != m_tastPool.end(); ++it)
             {
                 RunTast(*it, true);
             }
@@ -442,9 +441,9 @@ public: // what tast to run
 public: // overview tast
     int ListCase(bool bTable) // no const as below c++11 there in no cbegin()
     {
-        for (std::vector<CTastCase*>::iterator it = m_vecTastCase.begin(); it != m_vecTastCase.end(); ++it)
+        for (std::vector<CTastCase>::iterator it = m_tastPool.begin(); it != m_tastPool.end(); ++it)
         {
-            Print((*it)->List(bTable).c_str());
+            Print(it->List(bTable).c_str());
         }
         return 0;
     }
@@ -460,15 +459,14 @@ public: // overview tast
 };
 
 /// Build a concrete test case instance.
-template <typename T>
 struct CTastBuilder
 {
-    CTastBuilder(const char* name, const char* file, int line, bool autoRun, const char* desc = "")
+    CTastBuilder(voidfun_t run, const char* name, const char* file, int line, bool autoRun, const char* desc = "")
     {
         const char* slash = strrchr(file, '/');
         file = slash ? slash + 1 : file;
-        T* instance = new T();
-        instance->ctor(name, desc, file, line, autoRun);
+        CTastCase instance;
+        instance.ctor(run, name, desc, file, line, autoRun);
         CTastMgr::GetInstance()->AddTast(instance);
     }
 };
@@ -591,17 +589,13 @@ struct CStatement
 #define RUN_TAST(...) G_TASTMGR->RunTast(__VA_ARGS__)
 
 /// Define test case, with static builder adding to global manager before main.
-/// The following code bock is the body virtual function `run()`.
+/// The following code bock is the body of test function.
+#define TAST_RUNNER(name) tast_##name##_runner
+#define TAST_BUILDER(name) tast_##name##_builder
 #define DEF_TAST_IMPL(name, autoRun, ...) \
-    class CTast_ ## name : public tast::CTastCase \
-    { \
-    public: \
-        virtual void run(); \
-    private: \
-        static tast::CTastBuilder<CTast_ ## name> m_builder; \
-    }; \
-    tast::CTastBuilder<CTast_ ## name> CTast_ ## name::m_builder(#name, __FILE__, __LINE__, autoRun, ## __VA_ARGS__); \
-    void CTast_ ## name::run()
+    static void TAST_RUNNER(name)(); \
+    static tast::CTastBuilder TAST_BUILDER(name)(TAST_RUNNER(name), #name, __FILE__, __LINE__, autoRun, ## __VA_ARGS__); \
+    void  TAST_RUNNER(name)()
 
 /// The TAST case by can be auto run without argument.
 #define DEF_TAST(name, ...) DEF_TAST_IMPL(name, true, ## __VA_ARGS__)

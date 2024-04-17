@@ -174,7 +174,7 @@ struct CProcessWork
         for (int i = range.first; i < range.second; ++i)
         {
             auto& item = tastList[i];
-            w_tastMgr.RunTast(item);
+            w_tastMgr.RunTast(*item);
         }
     }
 
@@ -367,6 +367,12 @@ int process_run(const TastList& tastList, int workers, CTastMgr* pTastMgr)
     CProcessWork work(tastList, workers, *pTastMgr);
 
     return work.ForkRun();
+}
+
+int process_run(const TastPool& tastPool, int workers, CTastMgr* pTastMgr)
+{
+    TastList tastList = MakeTastList(tastPool);
+    return process_run(tastList, workers, pTastMgr);
 }
 
 } // end of namespace tast

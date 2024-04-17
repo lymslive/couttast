@@ -56,7 +56,7 @@ public:
     {
         if (m_tastList.empty())
         {
-            filter_tast(w_pTastMgr->GetTastList(), m_tastList, m_config);
+            filter_tast(w_pTastMgr->GetTastPool(), m_tastList, m_config);
         }
     }
 
@@ -94,15 +94,15 @@ bool CTastAgent::Help()
     int nTast = 0;
     std::string strTool;
     int nTool = 0;
-    for (auto& item : w_pTastMgr->GetTastList())
+    for (auto& item : w_pTastMgr->GetTastPool())
     {
-        if (item->m_autoRun)
+        if (item.m_autoRun)
         {
             if (++nTast > 1)
             {
                 strTast.append(" ");
             }
-            strTast.append(item->m_name);
+            strTast.append(item.m_name);
         }
         else
         {
@@ -110,7 +110,7 @@ bool CTastAgent::Help()
             {
                 strTool.append(" ");
             }
-            strTool.append(item->m_name);
+            strTool.append(item.m_name);
         }
     }
 
@@ -145,12 +145,9 @@ bool CTastAgent::List(bool bTable)
     }
     else
     {
-        for (auto& item : w_pTastMgr->GetTastList())
+        for (auto& item : w_pTastMgr->GetTastPool())
         {
-            if (item != nullptr)
-            {
-                w_pTastMgr->Print(item->List(bTable).c_str());
-            }
+            w_pTastMgr->Print(item.List(bTable).c_str());
         }
     }
 
@@ -159,8 +156,7 @@ bool CTastAgent::List(bool bTable)
 
 bool CTastAgent::ZeroMode(int& exitCode)
 {
-    if (w_pFirstArg != nullptr
-            || !w_pConfig->m_vecArg.empty() || !w_pConfig->m_mapOption.empty())
+    if (w_pFirstArg != nullptr || !w_pConfig->m_vecArg.empty() || !w_pConfig->m_mapOption.empty())
     {
         return false;
     }
@@ -182,19 +178,10 @@ bool CTastAgent::SubCommand(int& exitCode)
         return false;
     }
 
-    CTastCase* item = FindTastCase(w_pTastMgr->GetTastList(), w_pFirstArg);
+    CTastCase* item = w_pTastMgr->FindTastCase(w_pFirstArg);
     if (item == nullptr || item->m_autoRun)
     {
         return false;
-    }
-
-    // only help for this tool
-    if (m_config.help > 0)
-    {
-        std::string output;
-        item->help(output);
-        w_pTastMgr->Print(output.c_str());
-        return true;;
     }
 
     MoveArgument();
@@ -204,7 +191,7 @@ bool CTastAgent::SubCommand(int& exitCode)
     w_pTastMgr->CoutDisable(COUT_BIT_FOOT);
     w_pTastMgr->CoutDisable(COUT_BIT_LINE);
     w_pTastMgr->CoutDisable(COUT_BIT_LAST);
-    w_pTastMgr->RunTast(item);
+    w_pTastMgr->RunTast(*item);
 
     // not set exitCode, let it default to 0.
     return true;
@@ -214,7 +201,7 @@ int CTastAgent::LocalRun()
 {
     for (auto& item : m_tastList)
     {
-        w_pTastMgr->RunTast(item);
+        w_pTastMgr->RunTast(*item);
     }
 
     int failed = w_pTastMgr->Summary();

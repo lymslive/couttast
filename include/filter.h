@@ -40,10 +40,10 @@ namespace tast
  * @note The basic argument parse in `tinytast.hpp` roughly apply only 1,2,6,
  *  where may repeat run a test case if it match multiple arguments.
  * */
-void filter_tast(const TastList& tastInput, TastList& tastOutput, const CTinyIni& cli);
+void filter_tast(const TastPool& tastInput, TastList& tastOutput, const CTinyIni& cli);
 
 /// Filter test case by config already parsed from command line arguments.
-void filter_tast(const TastList& tastInput, TastList& tastOutput, const CTastConfig& cfg);
+void filter_tast(const TastPool& tastInput, TastList& tastOutput, const CTastConfig& cfg);
 
 /// Reorder randomly for a test case list, in [begin, end).
 void random_tast(TastEntry* begin, TastEntry* end);
