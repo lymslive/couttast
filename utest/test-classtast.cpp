@@ -84,3 +84,19 @@ DEC_TOOL(add, exe, "sample tool for add two number: --left=, --right=")
     int result = left + right;
     std::cout << "result: " << result << std::endl;
 }
+
+DEF_TAST(duplicate, "may duplicate test name in another file")
+{
+    COUT(4+4, 8);
+}
+
+DEC_TAST(MySuite, duplicate, "duplicate test name in suite")
+{
+    COUT(5+5, 10);
+}
+
+DEC_TAST(add, duplicate, "duplicate test name in another suite")
+{
+    COUT(6+6, 12);
+}
+

@@ -269,3 +269,24 @@ DEF_TAST(filter_random, "test filter with --random")
         DESC("may randomly equal with litter chance, re-run this test test case to confirm!");
     }
 }
+
+DEF_TAST(filter_duplicate, "test filter duplicate test name")
+{
+    DESC("filter by full name");
+    {
+        tast::CTinyIni cfg;
+        cfg.m_vecArg.push_back("duplicate");
+        tast::TastList tastCase;
+        tast::filter_tast(G_TASTMGR->GetTastPool(), tastCase, cfg);
+        COUT(tastCase.size(), 1);
+    }
+
+    DESC("filter by sub name");
+    {
+        tast::CTinyIni cfg;
+        cfg.m_vecArg.push_back("duplica");
+        tast::TastList tastCase;
+        tast::filter_tast(G_TASTMGR->GetTastPool(), tastCase, cfg);
+        COUT(tastCase.size(), 7);
+    }
+}
