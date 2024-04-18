@@ -31,16 +31,24 @@ typedef std::pair<int, int> IndexRange;
 std::vector<IndexRange> slice_index(int total, int count)
 {
     std::vector<IndexRange> ranges;
+
     int each = total / count;
+    int extra = total % count;
+
+    int first = 0;
     for (int i = 0; i < count; ++i)
     {
-        int first = i * each;
-        int last = (i+1) * each;
+        int last = first + each;
+        if (i < extra)
+        {
+            last++;
+        }
         if (i == count-1)
         {
             last = total;
         }
         ranges.push_back({first, last});
+        first = last;
     }
     return ranges;
 }

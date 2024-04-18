@@ -36,31 +36,13 @@ DEF_TOOL(pal_process, "run in multi-process: --process=4 --case=100 --error=0")
     COUT(1.0 * toc / (100 * 100 * 1000 / nProcess), 1.0, 0.01);
 }
 
-DEF_TOOL(scanf_foot, "test parse foot string by sscanf")
+int DiffRange(const std::vector<tast::IndexRange>& ranges)
 {
-    const char* str = "<< [PASS] filter_basic in 1357 us";
-    char pass[8] = {0};
-    char name[64] = {0};
-    int us = 0;
-    int nRead = sscanf(str, "<< [%4s] %s in %d us", pass, name, &us);
-    COUT(nRead, 3);
-    COUT(pass, std::string("PASS"));
-    COUT(name, std::string("filter_basic"));
-    COUT(us, 1357);
-
-    str = "<< [FAIL] except_macr in 762 us, 3 errors";
-    nRead = sscanf(str, "<< [%4s] %s in %d us", pass, name, &us);
-    COUT(nRead, 3);
-    COUT(pass, std::string("FAIL"));
-    COUT(name, std::string("except_macr"));
-    COUT(us, 762);
-
-    str = "<< [fail] Except_Macro ";
-    nRead = sscanf(str, "<< [%4s] %s in %d us", pass, name, &us);
-    COUT(nRead, 2);
-    COUT(pass, std::string("fail"));
-    COUT(name, std::string("Except_Macro"));
-    COUT(us, 762);
+    tast::IndexRange front = ranges[0];
+    tast::IndexRange back = ranges.back();
+    int frontDist = front.second - front.first;
+    int backDist = back.second - back.first;
+    return backDist - frontDist;
 }
 
 DEF_TAST(pal_slice, "test slice_index partition")
@@ -69,18 +51,21 @@ DEF_TAST(pal_slice, "test slice_index partition")
     {
         std::vector<tast::IndexRange> ranges = tast::slice_index(100, 4);
         COUT(ranges);
+        COUT(DiffRange(ranges), 0);
     }
 
     DESC("partition: 99 / 4");
     {
         std::vector<tast::IndexRange> ranges = tast::slice_index(99, 4);
         COUT(ranges);
+        COUT(DiffRange(ranges), -1);
     }
 
     DESC("partition: 101 / 4");
     {
         std::vector<tast::IndexRange> ranges = tast::slice_index(101, 4);
         COUT(ranges);
+        COUT(DiffRange(ranges), -1);
     }
 }
 
