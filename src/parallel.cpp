@@ -121,7 +121,8 @@ struct CProcessWork
         m_tastList = w_tastList;
         auto comp = [&presult](const TastEntry& a, const TastEntry& b)
         {
-            return presult.GetRuntime(a.first) <= presult.GetRuntime(b.first);
+            // fixme: construct std::string each time
+            return presult.GetRuntime(a->m_name) < presult.GetRuntime(b->m_name);
         };
         std::sort(m_tastList.begin(), m_tastList.end(), comp);
 
@@ -173,7 +174,7 @@ struct CProcessWork
         for (int i = range.first; i < range.second; ++i)
         {
             auto& item = tastList[i];
-            w_tastMgr.RunTast(item.first, item.second);
+            w_tastMgr.RunTast(*item);
         }
     }
 
@@ -287,7 +288,7 @@ struct CProcessWork
 
             for (int j = range.first; j < range.second; ++j)
             {
-                order.append(" ").append(tastList[j].first);
+                order.append(" ").append(tastList[j]->m_name);
             }
 
             if (!output.empty())
@@ -355,6 +356,7 @@ struct CProcessWork
     }
 };
 
+// fixme: maybe no need const, reorder tastList in place
 int process_run(const TastList& tastList, int workers, CTastMgr* pTastMgr)
 {
     if (pTastMgr == nullptr)
@@ -367,13 +369,9 @@ int process_run(const TastList& tastList, int workers, CTastMgr* pTastMgr)
     return work.ForkRun();
 }
 
-int process_run(const TastMap& tastMap, int workers, CTastMgr* pTastMgr)
+int process_run(const TastPool& tastPool, int workers, CTastMgr* pTastMgr)
 {
-    TastList tastList;
-    for (auto& item : tastMap)
-    {
-        tastList.push_back(item);
-    }
+    TastList tastList = MakeTastList(tastPool);
     return process_run(tastList, workers, pTastMgr);
 }
 

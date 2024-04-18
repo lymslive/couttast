@@ -13,41 +13,40 @@
 namespace tast
 {
 
-/// The base class which custome test suite class should be derived from.
-/// It is encouraged override `setup()` for initial code for each test case,
+/// The base class which custome test suite class may be derived from.
+/// It is encouraged overwrite `setup()` for initial code for each test case,
 /// and `teardown()` for any clean up code. The default constructor and
-/// destructor can also be used, but is not encouraged.
-struct CTastSuite : public CTastCase
+/// destructor can also be used.
+struct CTastSuite
 {
-    virtual void setup() {}
-    virtual void teardown() {}
-    virtual void body() = 0;
-    virtual void run()
-    {
-        this->setup();
-        this->body();
-        this->teardown();
-    }
+    void setup() {}
+    void teardown() {}
+    void run() {}
 };
+
+template <typename suiteT>
+void tast_suite_run()
+{
+    suiteT self;
+    self.setup();
+    self.run();
+    self.teardown();
+}
 
 } /* tast:: */ 
 
 /// Concate full test case name belong some test suite.
-#define STEST_NAME(suite, name) #suite "." #name
+#define STAST_NAME(suite, name) #suite "." #name
 /// Concate full test case class identifier belong some test suite.
-#define STEST_CLASS(suite, name) CTast_ ## suite ## _ ## name
+#define STAST_CLASS(suite, name) CTast_ ## suite ## _ ## name
+#define STAST_BUILDER(suite, name) tast_ ## suite ## _ ## name ## _builder
+#define STAST_RUNNER(suite, name) tast::tast_suite_run<STAST_CLASS(suite,name)>
 
 /// Define a test case belong to some suite.
 #define DEC_TAST_IMPL(suite, name, autoRun, ...) \
-    class STEST_CLASS(suite, name) : public suite \
-    { \
-    public: \
-        virtual void body(); \
-    private: \
-        static tast::CTastBuilder<STEST_CLASS(suite, name)> m_builder; \
-    }; \
-    tast::CTastBuilder<STEST_CLASS(suite, name)> STEST_CLASS(suite, name)::m_builder(STEST_NAME(suite, name), __FILE__, __LINE__, autoRun, ## __VA_ARGS__); \
-    void STEST_CLASS(suite, name)::body()
+    struct STAST_CLASS(suite, name) : public suite { void run(); }; \
+    static tast::CTastBuilder STAST_BUILDER(suite,name)(STAST_RUNNER(suite,name), STAST_NAME(suite,name), __FILE__, __LINE__, autoRun, ## __VA_ARGS__); \
+    void STAST_CLASS(suite, name)::run()
 
 /// Similar `DEF_TAST` but for custome test suite class.
 /// The suite class is inserted as the first argument.

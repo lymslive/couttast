@@ -5,6 +5,28 @@
 namespace tast
 {
 
+TastList MakeTastList(const TastPool& tastPool)
+{
+    TastList tastList;
+    for (auto& item: tastPool)
+    {
+        tastList.push_back(&item);
+    }
+    return tastList;
+}
+
+TastEntry FindTastCase(const TastList& tastList, const std::string& name)
+{
+    for (auto& item : tastList)
+    {
+        if (item != nullptr && item->EqualName(name))
+        {
+            return item;
+        }
+    }
+    return nullptr;
+}
+
 /* ---------------------------------------------------------------------- */
 
 void CTastConfig::ParseCli(const CTinyCli& cli)

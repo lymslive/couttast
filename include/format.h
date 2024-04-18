@@ -16,9 +16,15 @@ namespace tast
 {
 
 /// Type of container for test case.
-typedef std::map<std::string, CTastCase*> TastMap;
-typedef std::pair<std::string, CTastCase*> TastEntry;
+typedef const CTastCase* TastEntry;
 typedef std::vector<TastEntry> TastList;
+typedef std::vector<CTastCase> TastPool;
+
+/// Make a vector of pointer from vector of tast case object.
+TastList MakeTastList(const TastPool& tastPool);
+
+/// Find a test case by exact name, return nullptr if not found.
+TastEntry FindTastCase(const TastList& tastList, const std::string& name);
 
 /// Supported config information from cli or ini.
 struct CTastConfig

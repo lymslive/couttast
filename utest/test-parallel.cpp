@@ -4,7 +4,7 @@
 
 DEF_TOOL(pal_single, "run in single-process: compare standar")
 {
-    tast::CTastMgr stTastMgr;
+    mock::CTastMgr stTastMgr;
     FillSampleTast(stTastMgr, 100, "sp");
     stTastMgr.RunTast();
 }
@@ -22,7 +22,7 @@ DEF_TOOL(pal_process, "run in multi-process: --process=4 --case=100 --error=0")
     DESC("config option: --process=%d, --case=%d", nProcess, nCase);
 
     srand(123456);
-    tast::CTastMgr stTastMgr;
+    mock::CTastMgr stTastMgr;
     FillSampleTast(stTastMgr, nCase, "mp");
     if (nError > 0)
     {
@@ -30,7 +30,7 @@ DEF_TOOL(pal_process, "run in multi-process: --process=4 --case=100 --error=0")
     }
 
     TIME_TIC;
-    tast::process_run(stTastMgr.GetTastCase(), nProcess);
+    tast::process_run(stTastMgr.GetTastPool(), nProcess);
     auto toc = TIME_TOC;
     COUT(toc);
     COUT(1.0 * toc / (100 * 100 * 1000 / nProcess), 1.0, 0.01);
@@ -104,14 +104,10 @@ DEF_TOOL(pal_presort, "test presort and partition: --random")
     int nProcess = 4;
     int nCase = 100;
 
-    tast::CTastMgr stTastMgr;
+    mock::CTastMgr stTastMgr;
     FillSampleTast(stTastMgr, nCase, "mp");
-    tast::TastMap tastMap = stTastMgr.GetTastCase();
-    tast::TastList tastList;
-    for (auto& item : tastMap)
-    {
-        tastList.push_back(item);
-    }
+    const tast::TastPool& tastPool = stTastMgr.GetTastPool();
+    tast::TastList tastList = tast::MakeTastList(tastPool);
 
     // tast::CProcessWork work(tastList, nProcess, stTastMgr);
     tast::CProcessWork work(tastList, nProcess, *G_TASTMGR);
@@ -127,7 +123,7 @@ DEF_TOOL(pal_presort, "test presort and partition: --random")
     int index = 0;
     for (auto& item : work.m_tastList)
     {
-        DESC("%02d: %s: %ld", index++, item.first.c_str(), result.GetRuntime(item.first));
+        DESC("%02d: %s: %ld", index++, item->m_name, result.GetRuntime(item->m_name));
     }
 
     std::vector<int64_t> sumRange;
@@ -136,7 +132,7 @@ DEF_TOOL(pal_presort, "test presort and partition: --random")
         int64_t sum = 0;
         for (int i = range.first; i < range.second; ++i)
         {
-            sum += result.GetRuntime(work.m_tastList[i].first);
+            sum += result.GetRuntime(work.m_tastList[i]->m_name);
         }
         COUT(sum);
         sumRange.push_back(sum);

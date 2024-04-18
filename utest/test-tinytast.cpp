@@ -1,5 +1,6 @@
 #include "tinytast.hpp"
 #include "extra-macros.hpp"
+#include <exception>
 
 DEF_TOOL(tinytast_cout, "test cout output control, contains failed statement")
 {
@@ -29,7 +30,7 @@ DEF_TOOL(tinytast_sizeof, "view sizeof class in tast namespace")
     COUT(sizeof(CTinyCli));
     COUT(sizeof(CTastCase));
     COUT(sizeof(CTastMgr));
-    COUT(sizeof(CTastBuilder<int>));
+    COUT(sizeof(CTastBuilder));
     COUT(sizeof(CStatement));
 }
 
@@ -117,6 +118,31 @@ DEF_TAST(gtest_simacro, "simulate macro in gtest style")
 
     EXPECT_STREQ("hello", "hello");
     EXPECT_STRNE("hello", "hella");
+}
+
+DEF_TAST(duplicate, "may duplicate test name in global")
+{
+    COUT(1+1, 2);
+}
+
+namespace nest
+{
+
+DEF_TAST(duplicate, "may duplicate test name in namespace")
+{
+    COUT(2+2, 4);
+}
+
+namespace tool
+{
+
+DEF_TAST(duplicate, "may duplicate test name in namespace")
+{
+    COUT(3+3, 6);
+}
+
+}
+
 }
 
 #ifdef USE_TINY_MAIN

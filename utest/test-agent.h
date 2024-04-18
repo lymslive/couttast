@@ -3,9 +3,11 @@
 
 #include "couttast.h"
 
+#include "mock-tastmgr.h"
+
 /// Fill `nCount` test cases in `stTastMgr`, whose name and file contains
 /// `prefix` which is default "sample".
-void FillSampleTast(tast::CTastMgr& stTastMgr, int nCount, const char* prefix = nullptr);
+void FillSampleTast(mock::CTastMgr& stTastMgr, int nCount, const char* prefix = nullptr);
 
 /// Simulate COUT error randomly, in the probability of `percent`.
 void RandError(int percent);

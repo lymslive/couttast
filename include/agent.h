@@ -31,9 +31,6 @@ namespace tast
  * */
 int agent_run(CTastMgr& stTastMgr, CTinyIni& cfg, const char* firstArg);
 
-// A function type without any argument nor return value.
-typedef void (*voidfun_t)();
-
 /** Calculate the average run time of a function.
  * @param [IN] fun, the function to measure time.
  * @param [IN] times, loop times to run `fun`.

@@ -4,14 +4,10 @@
 
 #include <unistd.h>
 
-struct CTastSample : public tast::CTastCase
+struct CTastSample
 {
-    CTastSample(tast::CTastMgr* pTastMgr, const std::string& desc, const std::string& file, int line, bool autoRun = true)
-    {
-        ctor(desc, file, line, autoRun);
-    }
-
-    virtual void run() override
+    static int randError;
+    static void run()
     {
         int ms = 80 + rand() % 40;
         usleep(ms * 1000);
@@ -24,8 +20,6 @@ struct CTastSample : public tast::CTastCase
             }
         }
     }
-
-    static int randError;
 };
 
 int CTastSample::randError = 0;
@@ -35,7 +29,7 @@ void RandError(int percent)
     CTastSample::randError = percent;
 }
 
-void FillSampleTast(tast::CTastMgr& stTastMgr, int nCount, const char* prefix)
+void FillSampleTast(mock::CTastMgr& stTastMgr, int nCount, const char* prefix)
 {
     if (prefix == nullptr || prefix[0] == '\0')
     {
@@ -57,8 +51,13 @@ void FillSampleTast(tast::CTastMgr& stTastMgr, int nCount, const char* prefix)
         int line = 10 * (i%10) + 1;
         bool autoRun = ((i+1)%10 != 0);
 
-        tast::CTastCase* pTastCase = new CTastSample(&stTastMgr, desc, file, line, autoRun);
-        stTastMgr.AddTast(name, pTastCase);
+        const char* pszName = stTastMgr.SaveName(name);
+        const char* pszDesc = stTastMgr.SaveName(desc);
+        const char* pszFile = stTastMgr.SaveName(file);
+        // tast::CTastCase* pTastCase = new CTastSample(pszName, pszDesc, pszFile, line, autoRun);
+        // stTastMgr.AddTast(pTastCase);
+        tast::CTastCase tast(CTastSample::run, pszName, pszDesc, pszFile, line, autoRun);
+        stTastMgr.AddTast(tast);
     }
 }
 

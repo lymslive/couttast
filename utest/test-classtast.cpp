@@ -3,51 +3,24 @@
 
 struct SComplex
 {
-    int real = 0;
-    int image = 0;
+    int real;
+    int image;
 };
-
-DEF_TOOL(concat_dot, "macro to contcat with dot")
-{
-// #define DOT .
-// #define CONCAT_WITH_DOT(a, b) a ## . ## b
-// Note: not possible
-//     SComplex number;
-//     int real = CONCAT_WITH_DOT(number, real);
-//     COUT(real);
-//     COUT(number.real);
-// #undef CONCAT_WITH_DOT
-
-#define CONCAT_WITH_DOT(a, b) a##b
-    int part1 = 42;
-    int part2 = 99;
-    int part1part2 = 4299;
-    int combined = CONCAT_WITH_DOT(part1, part2);
-    DESC("Combined value: %d", combined);
-#undef CONCAT_WITH_DOT
-
-#define CONCAT_WITH_DOT(a, b) #a "." #b
-    const char* pszCombined = CONCAT_WITH_DOT(part1, part2);
-    DESC("Combined string: %s", pszCombined);
-#undef CONCAT_WITH_DOT
-}
 
 struct MySuite : public tast::CTastSuite
 {
-    int intValue = 0;
+    int intValue;
     std::string strValue;
     SComplex complexValue;
 
     MySuite()
     {
-        // DESC("MySuite constructor");
-        // would run before main
+        DESC("MySuite constructor");
         intValue = 100;
     }
     ~MySuite()
     {
-        // DESC("MySuite destructor");
-        // would run after main
+        DESC("MySuite destructor");
     }
 
     virtual void setup()
@@ -80,20 +53,54 @@ DEC_TOOL(MySuite, bbb, "test suite by DEC_TOOL")
 
 struct add : public tast::CTastSuite
 {
-    void help(std::string& output) const
+    int left;
+    int right;
+
+    add() : left(0), right(0)
     {
-        output += m_description;
-        output += "\ncustome help for usage:\n";
+    }
+
+    void setup()
+    {
+        if (TAST_OPTION.count("help"))
+        {
+            help();
+            exit(0);
+        }
+
+        std::string strLeft = TAST_OPTION["left"];
+        std::string strRight = TAST_OPTION["right"];
+        left = atoi(strLeft.c_str());
+        right = atoi(strRight.c_str());
+    }
+
+    void help() const
+    {
+        std::string output;
+        output += "custome help for usage:\n";
         output += "add.exe --left=? --right=?";
+        std::cout << output << std::endl;
     }
 };
 
-DEC_TOOL(add, exe, "sample tool for add two number")
+DEC_TOOL(add, exe, "sample tool for add two number: --left=, --right=")
 {
-    std::string strLeft = TAST_OPTION["left"];
-    std::string strRight = TAST_OPTION["right"];
-    int left = atoi(strLeft.c_str());
-    int right = atoi(strRight.c_str());
     int result = left + right;
     std::cout << "result: " << result << std::endl;
 }
+
+DEF_TAST(duplicate, "may duplicate test name in another file")
+{
+    COUT(4+4, 8);
+}
+
+DEC_TAST(MySuite, duplicate, "duplicate test name in suite")
+{
+    COUT(5+5, 10);
+}
+
+DEC_TAST(add, duplicate, "duplicate test name in another suite")
+{
+    COUT(6+6, 12);
+}
+
