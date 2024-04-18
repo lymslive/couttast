@@ -56,8 +56,7 @@ void FillSampleTast(mock::CTastMgr& stTastMgr, int nCount, const char* prefix)
         const char* pszFile = stTastMgr.SaveName(file);
         // tast::CTastCase* pTastCase = new CTastSample(pszName, pszDesc, pszFile, line, autoRun);
         // stTastMgr.AddTast(pTastCase);
-        tast::CTastCase tast;
-        tast.ctor(CTastSample::run, pszName, pszDesc, pszFile, line, autoRun);
+        tast::CTastCase tast(CTastSample::run, pszName, pszDesc, pszFile, line, autoRun);
         stTastMgr.AddTast(tast);
     }
 }

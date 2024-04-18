@@ -3,13 +3,13 @@
 
 struct SComplex
 {
-    int real = 0;
-    int image = 0;
+    int real;
+    int image;
 };
 
 struct MySuite : public tast::CTastSuite
 {
-    int intValue = 0;
+    int intValue;
     std::string strValue;
     SComplex complexValue;
 
@@ -53,8 +53,12 @@ DEC_TOOL(MySuite, bbb, "test suite by DEC_TOOL")
 
 struct add : public tast::CTastSuite
 {
-    int left = 0;
-    int right = 0;
+    int left;
+    int right;
+
+    add() : left(0), right(0)
+    {
+    }
 
     void setup()
     {

@@ -63,6 +63,8 @@ add_executable(utCxx98Tast
 
 target_compile_definitions(utCxx98Tast PRIVATE USE_TINY_MAIN)
 
+set_property(TARGET utCxx98Tast PROPERTY CXX_STANDARD 98)
+
 # enable ctest, make test
 enable_testing()
 add_test(NAME utCoutTast

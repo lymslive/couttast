@@ -115,16 +115,12 @@ struct CTastCase
     uint8_t  m_fileLen;        //< the length of file, max 256.
     bool m_autoRun;            //< can auto run without cli argument.
 
-    void ctor(voidfun_t run, const char* name, const char* desc, const char* file, int line, bool autoRun = true)
+    CTastCase() {}
+    CTastCase(voidfun_t run, const char* name, const char* desc, const char* file, int line, bool autoRun = true)
+        : m_run(run), m_name(name), m_description(desc), m_file(file), m_line(line), m_autoRun(autoRun)
     {
-        m_run = run;
-        m_name = name;
-        m_description = desc;
-        m_file = file;
-        m_line = line;
         m_nameLen = ::strlen(name);
         m_fileLen = ::strlen(file);
-        m_autoRun = autoRun;
     }
 
     bool EqualName(const std::string& name) const
@@ -181,6 +177,7 @@ class CTastMgr : public CTinyCli
     PrintFun m_fnPrint;  //< custome print function for output
 
     friend class CStatement;
+    friend class CTastBuilder;
 public: // constructor
     static CTastMgr* GetInstance()
     {
@@ -465,9 +462,12 @@ struct CTastBuilder
     {
         const char* slash = strrchr(file, '/');
         file = slash ? slash + 1 : file;
-        CTastCase instance;
-        instance.ctor(run, name, desc, file, line, autoRun);
+#if __cplusplus >= 201103L
+        CTastMgr::GetInstance()->m_tastPool.emplace_back(run, name, desc, file, line, autoRun);
+#else
+        CTastCase instance(run, name, desc, file, line, autoRun);
         CTastMgr::GetInstance()->AddTast(instance);
+#endif
     }
 };
 
