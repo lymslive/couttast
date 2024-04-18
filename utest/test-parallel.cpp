@@ -94,11 +94,10 @@ DEF_TOOL(pal_presort, "test presort and partition: --random")
     const tast::TastPool& tastPool = stTastMgr.GetTastPool();
     tast::TastList tastList = tast::MakeTastList(tastPool);
 
-    // tast::CProcessWork work(tastList, nProcess, stTastMgr);
     tast::CProcessWork work(tastList, nProcess, *G_TASTMGR);
     work.m_runfile = "sample.run";
     work.Partition();
-    COUT(work.m_tastList.size(), 100);
+    COUT(work.w_tastList.size(), 100);
 
     tast::CRuntimeResult result;
     int nRead = result.ReadFile(work.m_runfile);
@@ -106,18 +105,18 @@ DEF_TOOL(pal_presort, "test presort and partition: --random")
     COUT(result.m_avgRuntime);
 
     int index = 0;
-    for (auto& item : work.m_tastList)
+    for (auto& item : work.w_tastList)
     {
         DESC("%02d: %s: %ld", index++, item->m_name, result.GetRuntime(item->m_name));
     }
 
     std::vector<int64_t> sumRange;
-    for (auto& range : work.m_ranges)
+    for (auto& range : work.m_range)
     {
         int64_t sum = 0;
-        for (int i = range.first; i < range.second; ++i)
+        for (tast::TastEntry* it = range.first; it < range.last; ++it)
         {
-            sum += result.GetRuntime(work.m_tastList[i]->m_name);
+            sum += result.GetRuntime((*it)->m_name);
         }
         COUT(sum);
         sumRange.push_back(sum);

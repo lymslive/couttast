@@ -94,17 +94,29 @@ struct CRuntimeResult
     }
 };
 
+struct TastRange
+{
+    TastEntry* first = nullptr;
+    TastEntry* last = nullptr;
+
+    int count() const
+    {
+        return last - first;
+    }
+};
+
 struct CProcessWork
 {
-    const TastList& w_tastList; // input tast list to run
-    CTastMgr& w_tastMgr;        // in which CTastMgr to run
-    int m_workers = 0;          // dispatch how many workers to run
-    TastList m_tastList;        // reordered tast list
-    std::vector<IndexRange> m_ranges; // partition ranges of m_tastList
-    CTastSummary m_summary;    // summary of workers
-    std::string m_runfile;     // file to record runtime of each tast
+    TastList& w_tastList; //< input tast list to run
+    CTastMgr& w_tastMgr;        //< in which CTastMgr to run
+    int m_workers = 0;          //< dispatch how many workers to run
+    std::vector<TastRange> m_range; //< range for each worker, point into
+                                    //< w_tastList or m_section item.
+    std::vector<TastList> m_section; //< split tast list for each worker.
+    CTastSummary m_summary;    //< summary of workers
+    std::string m_runfile;     //< file to record runtime of each tast
 
-    CProcessWork(const TastList& tastList, int workers, CTastMgr& tastMgr)
+    CProcessWork(TastList& tastList, int workers, CTastMgr& tastMgr)
         : w_tastList(tastList), w_tastMgr(tastMgr), m_workers(workers)
     {
         fix_workers(m_workers);
@@ -117,93 +129,102 @@ struct CProcessWork
         return w_tastMgr.m_mapOption.count("random") > 0;
     }
 
-    // copy and sort
-    void PreSort()
+    // sort and re arrange
+    bool PreSort()
     {
         CRuntimeResult presult;
         if (presult.ReadFile(m_runfile) <= 0)
         {
-            return;
+            return false;
         }
 
-        m_tastList = w_tastList;
         auto comp = [&presult](const TastEntry& a, const TastEntry& b)
         {
             // fixme: construct std::string each time
             return presult.GetRuntime(a->m_name) < presult.GetRuntime(b->m_name);
         };
-        std::sort(m_tastList.begin(), m_tastList.end(), comp);
+        std::sort(w_tastList.begin(), w_tastList.end(), comp);
 
-        TastList tmpList;
-        tmpList.reserve(m_tastList.size());
-        int each = m_tastList.size() / m_workers;
-        for (int i = 0; i < m_workers; ++i)
+        // zigzag fill the sorted test in section for each worker.
+        m_section.resize(m_workers);
+
+        int work = 0;
+        int step = 1;
+        for (auto item : w_tastList)
         {
-            for (int j = 0; j < each; ++j)
+            m_section[work].push_back(item);
+            if (step == 1 && work == m_workers - 1)
             {
-                tmpList.push_back(m_tastList[i+m_workers*j]);
+                step = -1;
+            }
+            else if (step == -1 && work == 0)
+            {
+                step = 1;
+            }
+            else
+            {
+                work = work + step;
             }
         }
 
-        // the last part may be a bit longer
-        // should match slice_index() algorithm
-        int last = each * m_workers;
-        for (int i = last; i < m_tastList.size(); ++i)
+        m_range.resize(m_workers);
+        for (int work = 0; work < m_workers; ++work)
         {
-            tmpList.push_back(m_tastList[i]);
+            m_range[work].first = &(m_section[work].front());
+            m_range[work].last = &(m_section[work].back()) + 1;
         }
 
-        m_tastList.swap(tmpList);
+        if (HasRandom())
+        {
+            RandomRange();
+        }
+
+        return true;
     }
 
     void Partition()
     {
-        PreSort();
-        m_ranges = slice_index(w_tastList.size(), m_workers);
-
-        // --random, reorder each range before child process
-        // no need to reorder w_tastList, as has been random passed in.
-        if (HasRandom() && !m_tastList.empty())
+        if (PreSort())
         {
-            RandomRange();
+            return;
+        }
+
+        std::vector<IndexRange> slice = slice_index(w_tastList.size(), m_workers);
+        for (auto& item : slice)
+        {
+            TastRange range;
+            range.first = &w_tastList[item.first];
+            range.last = &w_tastList[item.second];
+            m_range.push_back(range);
         }
     }
 
     void RandomRange()
     {
-        for (auto& range : m_ranges)
+        for (auto& range : m_range)
         {
-            random_tast(&m_tastList[range.first], &m_tastList[range.second]);
+            random_tast(range.first, range.last);
         }
     }
 
-    void DealRange(const TastList& tastList, IndexRange range)
+    void DealRange(const TastRange& range)
     {
-        for (int i = range.first; i < range.second; ++i)
+        for (TastEntry* it = range.first; it < range.last; ++it)
         {
-            auto& item = tastList[i];
-            w_tastMgr.RunTast(*item);
+            w_tastMgr.RunTast(**it);
         }
     }
 
     void ChildWork(int worker)
     {
         if (worker < 0 || worker >= m_workers) { return; }
-        if (m_ranges.size() != m_workers) { return; }
+        if (m_range.size() != m_workers) { return; }
 
         w_tastMgr.CoutDisable(COUT_MASK_ALL);
         w_tastMgr.CoutEnable(COUT_BIT_FOOT);
         w_tastMgr.SetPrint(nullptr);
 
-        IndexRange range = m_ranges[worker];
-        if (m_tastList.empty())
-        {
-            DealRange(w_tastList, range);
-        }
-        else 
-        {
-            DealRange(m_tastList, range);
-        }
+        DealRange(m_range[worker]);
     }
 
     void ParentWork(FILE* fp)
@@ -258,14 +279,7 @@ struct CProcessWork
         if (m_summary.fail != 0 || w_tastMgr.CoutMask(COUT_BIT_DESC))
         {
             output.clear();
-            if (m_tastList.empty())
-            {
-                RerportRange(output, w_tastList);
-            }
-            else 
-            {
-                RerportRange(output, m_tastList);
-            }
+            RerportRange(output, w_tastList);
             // no COUT_BIT control to ouput all
             w_tastMgr.Print(output.c_str());
         }
@@ -288,15 +302,15 @@ struct CProcessWork
     void RerportRange(std::string& output, const TastList& tastList)
     {
         int i = 0;
-        for (auto& range : m_ranges)
+        for (auto& range : m_range)
         {
             std::string order("-- process");
             order.append("[").append(std::to_string(i)).append("]:");
             i++;
 
-            for (int j = range.first; j < range.second; ++j)
+            for (TastEntry* it = range.first; it < range.last; ++it)
             {
-                order.append(" ").append(tastList[j]->m_name);
+                order.append(" ").append((*it)->m_name);
             }
 
             if (!output.empty())
@@ -328,8 +342,7 @@ struct CProcessWork
             }
             else if (pid > 0) // current parent process
             {
-                IndexRange range = m_ranges[i];
-                DESC("forked child process[%d] for range[%d,%d)", pid, range.first, range.second);
+                DESC("forked child process[%d] to test %d cases", pid, m_range[i].count());
             }
             else // forked child process
             {
@@ -364,8 +377,9 @@ struct CProcessWork
     }
 };
 
-// fixme: maybe no need const, reorder tastList in place
-int process_run(const TastList& tastList, int workers, CTastMgr* pTastMgr)
+/* ---------------------------------------------------------------------- */
+
+int process_run(TastList& tastList, int workers, CTastMgr* pTastMgr)
 {
     if (pTastMgr == nullptr)
     {

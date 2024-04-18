@@ -24,7 +24,7 @@ const int MINLIST_TO_PROCESS = 8;
  *  to command line argument, as well as the `workers` count, and `pTastMgr`
  *  is default to the global `CTastMgr` instance.
  * */
-int process_run(const TastList& tastList, int workers, CTastMgr* pTastMgr = nullptr);
+int process_run(TastList& tastList, int workers, CTastMgr* pTastMgr = nullptr);
 
 /** Run all test cases from the test pool in multiple process.
  * */
