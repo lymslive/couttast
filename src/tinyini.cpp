@@ -38,6 +38,23 @@ int Trim(std::string& src)
 namespace tast
 {
 
+bool CTinyCliPtr::HasKey(const std::string& key)
+{
+    if (m_ptr == nullptr)
+    {
+        return false;
+    }
+    auto it = m_ptr->m_mapOption.find(key);
+    return it != m_ptr->m_mapOption.end();
+}
+
+bool CTinyCliPtr::HasKey(const char* kp1, const char* kp2)
+{
+    std::string key(kp1);
+    key.append(1, '.').append(kp2);
+    return HasKey(key);
+}
+
 bool CTinyCliPtr::GetValue(std::string& val, const std::string& key)
 {
     if (m_ptr == nullptr)

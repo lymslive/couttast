@@ -1,6 +1,7 @@
 #include "parallel.h"
 #include "filter.h"
 
+#include <unordered_map>
 #include <fstream>
 #include <algorithm>
 
@@ -53,9 +54,9 @@ std::vector<IndexRange> slice_index(int total, int count)
     return ranges;
 }
 
-struct CRuntimeResult
+struct CTastRuntime
 {
-    std::map<std::string, int64_t> m_mapRuntime;
+    std::unordered_map<std::string, int64_t> m_mapRuntime;
     int64_t m_avgRuntime;
 
     int ReadFile(const std::string& file)
@@ -120,19 +121,31 @@ struct CProcessWork
         : w_tastList(tastList), w_tastMgr(tastMgr), m_workers(workers)
     {
         fix_workers(m_workers);
-        m_runfile = program_invocation_short_name;
-        m_runfile += ".run";
     }
 
     bool HasRandom() const
     {
-        return w_tastMgr.m_mapOption.count("random") > 0;
+        return CTinyCliPtr(&w_tastMgr).HasKey("random");
+    }
+
+    bool CheckPrerun()
+    {
+        if (false == CTinyCliPtr(&w_tastMgr).GetValue(m_runfile, "prerun"))
+        {
+            return false;
+        }
+        if (m_runfile.empty() || m_runfile == "--")
+        {
+            m_runfile = program_invocation_short_name;
+            m_runfile += ".run";
+        }
+        return true;
     }
 
     // sort and re arrange
     bool PreSort()
     {
-        CRuntimeResult presult;
+        CTastRuntime presult;
         if (presult.ReadFile(m_runfile) <= 0)
         {
             return false;
@@ -184,7 +197,7 @@ struct CProcessWork
 
     void Partition()
     {
-        if (PreSort())
+        if (CheckPrerun() && PreSort())
         {
             return;
         }
@@ -242,7 +255,10 @@ struct CProcessWork
             // printf("%s", ptr);
             if (len > 0 && ptr[len-1] == '\n')
             {
-                fout << ptr;
+                if (fout)
+                {
+                    fout << ptr;
+                }
                 ptr[len-1] = '\0';
                 w_tastMgr.Print(COUT_BIT_FOOT, ptr);
             }
@@ -280,7 +296,6 @@ struct CProcessWork
         {
             output.clear();
             RerportRange(output, w_tastList);
-            // no COUT_BIT control to ouput all
             w_tastMgr.Print(output.c_str());
         }
 

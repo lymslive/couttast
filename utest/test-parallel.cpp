@@ -72,7 +72,7 @@ DEF_TAST(pal_slice, "test slice_index partition")
 DEF_TAST(pal_runresult, "test deal with runtime result")
 {
     const char* sample = "sample.run";
-    tast::CRuntimeResult result;
+    tast::CTastRuntime result;
     int nRead = result.ReadFile(sample);
     COUT(nRead, 100);
     COUT(result.m_avgRuntime);
@@ -84,7 +84,7 @@ DEF_TAST(pal_runresult, "test deal with runtime result")
     COUT(result.GetRuntime("mp_case_101"), result.m_avgRuntime);
 }
 
-DEF_TOOL(pal_presort, "test presort and partition: --random")
+DEF_TOOL(pal_presort, "test presort and partition: --prerun --random")
 {
     int nProcess = 4;
     int nCase = 100;
@@ -99,7 +99,7 @@ DEF_TOOL(pal_presort, "test presort and partition: --random")
     work.Partition();
     COUT(work.w_tastList.size(), 100);
 
-    tast::CRuntimeResult result;
+    tast::CTastRuntime result;
     int nRead = result.ReadFile(work.m_runfile);
     COUT(nRead, 100);
     COUT(result.m_avgRuntime);
@@ -122,6 +122,9 @@ DEF_TOOL(pal_presort, "test presort and partition: --random")
         sumRange.push_back(sum);
     }
 
-    COUT(1.0 * sumRange.back() / sumRange.front(), 1.0, 0.01);
+    if (!COUT(1.0 * sumRange.back() / sumRange.front(), 1.0, 0.01))
+    {
+        DESC("you may use --prerun and --cwd option to read sample.run file");
+    }
 }
 

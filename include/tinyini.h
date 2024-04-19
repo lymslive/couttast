@@ -24,10 +24,15 @@ public:
     CTinyCliPtr() {}
     CTinyCliPtr(const CTinyCli* ptr) : m_ptr(ptr) {}
 
+    /// check if has the option.
+    bool HasKey(const std::string& key);
+    bool HasKey(const char* kp1, const char* kp2);
+
     /// get option value in string value, pass `key` or `kp1.kp2` in tow parts
     bool GetValue(std::string& val, const std::string& key);
     bool GetValue(std::string& val, const char* kp1, const char* kp2);
 
+    /// get option value as int value.
     bool GetValue(int& val, const std::string& key);
     bool GetValue(int& val, const char* kp1, const char* kp2);
 };

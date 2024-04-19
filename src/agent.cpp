@@ -84,6 +84,7 @@ bool CTastAgent::Help()
     w_pTastMgr->Print("  --notool: donot run tool even when match cli argument");
     w_pTastMgr->Print("  --random: run or list the test cases in random order");
     w_pTastMgr->Print("  --job=: run in multiple process");
+    w_pTastMgr->Print("  --prerun=: read and write runtime record file, mainly to support blance in multiple process, default tast_program.run");
     w_pTastMgr->Print("  --nocolour: disable colour print which default enabled");
     w_pTastMgr->Print("  --colour=[always]: enable colour print even in silent mode or not print to terminal");
     w_pTastMgr->Print("  --cwd: change to new working drirectory");
