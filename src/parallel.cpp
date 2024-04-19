@@ -93,6 +93,83 @@ struct CTastRuntime
         }
         return m_avgRuntime;
     }
+
+    void SortZigzag(TastList& tastList, std::vector<TastList>& section)
+    {
+        if (section.empty() || tastList.size() < section.size())
+        {
+            return;
+        }
+
+        auto comp = [this](const TastEntry& a, const TastEntry& b)
+        {
+            // fixme: construct std::string each time
+            return this->GetRuntime(a->m_name) < this->GetRuntime(b->m_name);
+        };
+        std::sort(tastList.begin(), tastList.end(), comp);
+
+        int workers = section.size();
+        int work = 0;
+        int step = 1;
+        for (auto item : tastList)
+        {
+            section[work].push_back(item);
+            if (step == 1 && work == workers - 1)
+            {
+                step = -1;
+            }
+            else if (step == -1 && work == 0)
+            {
+                step = 1;
+            }
+            else
+            {
+                work = work + step;
+            }
+        }
+    }
+
+    void MinHeapFill(TastList& tastList, std::vector<TastList>& section)
+    {
+        if (section.empty() || tastList.size() < section.size())
+        {
+            return;
+        }
+
+        std::vector<int64_t> sumTime(section.size(), 0);
+
+        std::vector<int> index;
+        for (int i = 0; i < section.size(); ++i)
+        {
+            index.push_back(i);
+        }
+
+        auto comp = [&sumTime](int a, int b)
+        {
+            return sumTime[a] > sumTime[b];
+        };
+
+        auto it = tastList.begin();
+        auto itEnd = tastList.end();
+
+        // fill each section one item before make min heap
+        for (int i = 0; i < section.size(); ++i)
+        {
+            section[i].push_back(*it);
+            sumTime[i] +=GetRuntime((*it)->m_name);
+            ++it;
+        }
+
+        // fill the remain items.
+        while (it != itEnd)
+        {
+            std::make_heap(index.begin(), index.end(), comp);
+            int work = index[0];
+            section[work].push_back(*it);
+            sumTime[work] +=GetRuntime((*it)->m_name);
+            ++it;
+        }
+    }
 };
 
 struct TastRange
@@ -121,6 +198,7 @@ struct CProcessWork
         : w_tastList(tastList), w_tastMgr(tastMgr), m_workers(workers)
     {
         fix_workers(m_workers);
+        CheckPrerun();
     }
 
     bool HasRandom() const
@@ -151,34 +229,9 @@ struct CProcessWork
             return false;
         }
 
-        auto comp = [&presult](const TastEntry& a, const TastEntry& b)
-        {
-            // fixme: construct std::string each time
-            return presult.GetRuntime(a->m_name) < presult.GetRuntime(b->m_name);
-        };
-        std::sort(w_tastList.begin(), w_tastList.end(), comp);
-
         // zigzag fill the sorted test in section for each worker.
         m_section.resize(m_workers);
-
-        int work = 0;
-        int step = 1;
-        for (auto item : w_tastList)
-        {
-            m_section[work].push_back(item);
-            if (step == 1 && work == m_workers - 1)
-            {
-                step = -1;
-            }
-            else if (step == -1 && work == 0)
-            {
-                step = 1;
-            }
-            else
-            {
-                work = work + step;
-            }
-        }
+        presult.SortZigzag(w_tastList, m_section);
 
         m_range.resize(m_workers);
         for (int work = 0; work < m_workers; ++work)
@@ -197,7 +250,7 @@ struct CProcessWork
 
     void Partition()
     {
-        if (CheckPrerun() && PreSort())
+        if (!m_runfile.empty() && PreSort())
         {
             return;
         }

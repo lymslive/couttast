@@ -1,5 +1,6 @@
 #include "test-agent.h"
 #include "parallel.h"
+#include "classtast.hpp"
 #include "../src/parallel.cpp"
 
 DEF_TOOL(pal_single, "run in single-process: compare standar")
@@ -128,3 +129,76 @@ DEF_TOOL(pal_presort, "test presort and partition: --prerun --random")
     }
 }
 
+struct PalPart
+{
+    int nProcess = 4;
+    int nCase = 100;
+    std::string runfile = "sample.run";
+    tast::TastList tastList;
+    std::vector<tast::TastList> section;
+    tast::CTastRuntime presult;
+    mock::CTastMgr stTastMgr;
+
+    void setup()
+    {
+        FillSampleTast(stTastMgr, nCase, "mp");
+        const tast::TastPool& tastPool = stTastMgr.GetTastPool();
+        tastList = tast::MakeTastList(tastPool);
+
+        COUT_ASSERT(presult.ReadFile(runfile), 100);
+        COUT(presult.m_avgRuntime);
+
+        section.resize(nProcess);
+    }
+
+    void teardown()
+    {
+        int index = 0;
+        for (auto& item : tastList)
+        {
+            DESC("%02d: %s: %ld", index++, item->m_name, presult.GetRuntime(item->m_name));
+        }
+
+        int64_t sumTotal = 0;
+        std::vector<int64_t> sumRange;
+        for (auto& range : section)
+        {
+            int64_t sum = 0;
+            for (auto& item : range)
+            {
+                sum += presult.GetRuntime(item->m_name);
+                COUT(item->m_name);
+            }
+            COUT(sum);
+            sumRange.push_back(sum);
+            sumTotal += sum;
+        }
+
+        int64_t sumAverage = sumTotal / section.size();
+        int64_t sumDiff = 0;
+        for (auto sum : sumRange)
+        {
+            int64_t diff = sum - sumAverage;
+            sumDiff = diff*diff;
+        }
+
+        COUT(sumAverage);
+        COUT(sumDiff);
+
+        if (!COUT(1.0 * sumRange.back() / sumRange.front(), 1.0, 0.01))
+        {
+            DESC("you may use --prerun and --cwd option to read sample.run file");
+        }
+    }
+};
+
+DEC_TOOL(PalPart, heapfill, "test min-heap and partition: --prerun --random")
+{
+    presult.MinHeapFill(tastList, section);
+}
+
+// more balance than heapfill although a bit slow
+DEC_TOOL(PalPart, sortzigzag, "test sort ziazag and partition: --prerun --random")
+{
+    presult.SortZigzag(tastList, section);
+}
