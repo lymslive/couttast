@@ -1,5 +1,6 @@
 #include "parallel.h"
 #include "filter.h"
+#include "tastargv.hpp"
 
 #include <unordered_map>
 #include <fstream>
@@ -203,12 +204,12 @@ struct CProcessWork
 
     bool HasRandom() const
     {
-        return CTinyCliPtr(&w_tastMgr).HasKey("random");
+        return CTastArgv(&w_tastMgr).HasKey("random");
     }
 
     bool CheckPrerun()
     {
-        if (false == CTinyCliPtr(&w_tastMgr).GetValue(m_runfile, "prerun"))
+        if (false == CTastArgv(&w_tastMgr).BindValue(m_runfile, "prerun"))
         {
             return false;
         }

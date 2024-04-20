@@ -38,63 +38,6 @@ int Trim(std::string& src)
 namespace tast
 {
 
-bool CTinyCliPtr::HasKey(const std::string& key)
-{
-    if (m_ptr == nullptr)
-    {
-        return false;
-    }
-    auto it = m_ptr->m_mapOption.find(key);
-    return it != m_ptr->m_mapOption.end();
-}
-
-bool CTinyCliPtr::HasKey(const char* kp1, const char* kp2)
-{
-    std::string key(kp1);
-    key.append(1, '.').append(kp2);
-    return HasKey(key);
-}
-
-bool CTinyCliPtr::GetValue(std::string& val, const std::string& key)
-{
-    if (m_ptr == nullptr)
-    {
-        return false;
-    }
-    auto it = m_ptr->m_mapOption.find(key);
-    if (it != m_ptr->m_mapOption.end())
-    {
-        val = it->second;
-        return true;
-    }
-    return false;
-}
-
-bool CTinyCliPtr::GetValue(std::string& val, const char* kp1, const char* kp2)
-{
-    std::string key(kp1);
-    key.append(1, '.').append(kp2);
-    return GetValue(val, key);
-}
-
-bool CTinyCliPtr::GetValue(int& val, const std::string& key)
-{
-    std::string str;
-    if (GetValue(str, key))
-    {
-        val = atoi(str.c_str());
-        return true;
-    }
-	return false;
-}
-
-bool CTinyCliPtr::GetValue(int& val, const char* kp1, const char* kp2)
-{
-    std::string key(kp1);
-    key.append(1, '.').append(kp2);
-    return GetValue(val, key);
-}
-
 void CTinyIni::ParseLines(const std::vector<std::string>& args)
 {
     if (args.empty())
@@ -180,10 +123,3 @@ void CTinyIni::Merge(CTinyIni& that)
 
 } // end of namespace tast
 
-std::ostream& operator<<(std::ostream& os, const tast::CTinyCli& cli)
-{
-    os << "...\n";
-    os << "option: " << cli.m_mapOption << "\n";
-    os << "argument: " << cli.m_vecArg;
-    return os;
-}

@@ -93,7 +93,8 @@ set(COUTTAST_HEADER
     include/tast_util.hpp
     include/private-access.hpp
     include/classtast.hpp
-    #include/tinyini.h
+    include/tastargv.hpp
+    include/tinyini.h
 )
 
 # package config

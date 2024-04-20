@@ -15,15 +15,6 @@
 namespace tast
 {
 
-/// Type for command line argument and option.
-typedef std::map<std::string, std::string> Options;
-typedef std::vector<std::string> Arguments;
-
-/// Get the global cli option and argument, stored in `CTastMgr` instance.
-bool GetOption(const std::string& key, std::string& val);
-bool GetOption(const std::string& key, int& val);
-const std::vector<std::string>& GetArguments();
-
 /// The main entry point for the core test program.
 /// A custom main() function with strong symbol can be provided to override
 /// the default `::main` that only call this `tast::main()`.

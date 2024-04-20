@@ -10,21 +10,6 @@
 namespace tast
 {
 
-bool GetOption(const std::string& key, std::string& val)
-{
-    return CTinyCliPtr(CTastMgr::GetInstance()).GetValue(val, key);
-}
-
-bool GetOption(const std::string& key, int& val)
-{
-    return CTinyCliPtr(CTastMgr::GetInstance()).GetValue(val, key);
-}
-
-const std::vector<std::string>& GetArguments()
-{
-    return CTastMgr::GetInstance()->m_vecArg;
-}
-
 /* ---------------------------------------------------------------------- */
 
 void CheckLeadHome(std::string& src)

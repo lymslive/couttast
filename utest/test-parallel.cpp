@@ -1,6 +1,7 @@
 #include "test-agent.h"
 #include "parallel.h"
 #include "classtast.hpp"
+#include "coutstd.hpp"
 #include "../src/parallel.cpp"
 
 DEF_TOOL(pal_single, "run in single-process: compare standar")
@@ -16,9 +17,9 @@ DEF_TOOL(pal_process, "run in multi-process: --process=4 --case=100 --error=0")
     int nProcess = 4;
     int nCase = 100;
     int nError = 0;
-    tast::GetOption("process", nProcess);
-    tast::GetOption("case", nCase);
-    tast::GetOption("error", nError);
+    BIND_ARGV(nProcess, "process");
+    BIND_ARGV(nCase, "case");
+    BIND_ARGV(nError, "error");
 
     DESC("config option: --process=%d, --case=%d", nProcess, nCase);
 

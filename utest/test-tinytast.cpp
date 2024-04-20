@@ -141,7 +141,7 @@ DEF_TAST(duplicate, "may duplicate test name in namespace")
     COUT(3+3, 6);
 }
 
-}
+} // endof nest::
 
 }
 

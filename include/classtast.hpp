@@ -24,6 +24,7 @@ struct CTastSuite
     void run() {}
 };
 
+/// The test run function for that derived from a test suite class.
 template <typename suiteT>
 void tast_suite_run()
 {

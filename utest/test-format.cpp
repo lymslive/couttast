@@ -1,5 +1,8 @@
 #include "format.h"
 
+// defined in test-tinyini.cpp
+std::ostream& operator<<(std::ostream& os, const tast::CTinyCli& cli);
+
 // Parse a string as cli argument simply seprated by space, may modify it in place.
 void ParseCli(tast::CTinyCli& cli, std::string& line)
 {

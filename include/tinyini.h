@@ -1,7 +1,7 @@
 /**
  * @file tinyini.h
  * @author lymslive
- * @date 2023-06-13
+ * @date 2023-06-13 2024-04-20
  * @brief tiny ini that extend comand line argumet input.
  * @details 
  * The cli option `--section.key=val` can save in ini file in `[section]`.
@@ -10,33 +10,10 @@
 #define TINYINI_H__
 
 #include "tinytast.hpp"
-#include "coutstd.hpp"
 
 namespace tast
 {
     
-/// Wrap a `CTinyCli` to extend some methods.
-class CTinyCliPtr
-{
-    const CTinyCli* m_ptr = nullptr;
-
-public:
-    CTinyCliPtr() {}
-    CTinyCliPtr(const CTinyCli* ptr) : m_ptr(ptr) {}
-
-    /// check if has the option.
-    bool HasKey(const std::string& key);
-    bool HasKey(const char* kp1, const char* kp2);
-
-    /// get option value in string value, pass `key` or `kp1.kp2` in tow parts
-    bool GetValue(std::string& val, const std::string& key);
-    bool GetValue(std::string& val, const char* kp1, const char* kp2);
-
-    /// get option value as int value.
-    bool GetValue(int& val, const std::string& key);
-    bool GetValue(int& val, const char* kp1, const char* kp2);
-};
-
 /// Treat ini config file as extra cli argument inputs.
 class CTinyIni : public CTinyCli
 {
@@ -46,19 +23,8 @@ public:
 
     /// Merge `that` into `this`, self arguments and options take precedence.
     void Merge(CTinyIni& that);
-
-    /// forward to `CTinyCliPtr::GetValue`
-    template <typename... Targs>
-    bool GetValue(Targs&&... Fargs) const
-    {
-        return CTinyCliPtr(this).GetValue(std::forward<Targs>(Fargs)...);
-    }
-
 };
 
 } /* tast */ 
-
-/// operator<< overload for tast::CTinyCli in global namesapce.
-std::ostream& operator<<(std::ostream& os, const tast::CTinyCli& cli);
 
 #endif /* end of include guard: TINYINI_H__ */

@@ -1,5 +1,6 @@
 #include "test-agent.h"
 #include "filter.h"
+#include "coutstd.hpp"
 
 std::ostream& operator<<(std::ostream& os, const tast::TastEntry& tast)
 {

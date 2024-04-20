@@ -1,5 +1,6 @@
 #include "tinytast.hpp"
 #include "classtast.hpp"
+#include "tastargv.hpp"
 
 struct SComplex
 {
@@ -62,16 +63,14 @@ struct add : public tast::CTastSuite
 
     void setup()
     {
-        if (TAST_OPTION.count("help"))
+        if (!TAST_ARGV["help"].empty())
         {
             help();
             exit(0);
         }
 
-        std::string strLeft = TAST_OPTION["left"];
-        std::string strRight = TAST_OPTION["right"];
-        left = atoi(strLeft.c_str());
-        right = atoi(strRight.c_str());
+        BIND_ARGV(left);
+        BIND_ARGV(right);
     }
 
     void help() const
@@ -86,6 +85,24 @@ struct add : public tast::CTastSuite
 DEC_TOOL(add, exe, "sample tool for add two number: --left=, --right=")
 {
     int result = left + right;
+    std::cout << "result: " << result << std::endl;
+
+    int sum = 0;
+    int num = 0;
+    for (int i = 1; BIND_ARGV(num, i); ++i)
+    {
+        sum += num;
+    }
+    COUT(sum);
+}
+
+DEC_TOOL(add, fexe, "sample tool for add two float number: --left=, --right=")
+{
+    double left;
+    double right;
+    BIND_ARGV(left);
+    BIND_ARGV(right);
+    double result = left + right;
     std::cout << "result: " << result << std::endl;
 }
 
@@ -104,3 +121,37 @@ DEC_TAST(add, duplicate, "duplicate test name in another suite")
     COUT(6+6, 12);
 }
 
+DEF_TAST(tastargv, "test argv managemant")
+{
+    tast::CTastMgr stTastMgr;
+    tast::CTastArgv argv(&stTastMgr);
+
+    tast::CliArgument& argument = argv.Argument();
+    tast::CliOption& option = argv.Option();
+
+    argument.push_back("hello");
+    argument.push_back("world");
+
+    option["xyz"] = "123";
+    option["section.xyz"] = "45.6";
+
+    COUT(argv[0], "hello");
+    COUT(argv[1], "world");
+    COUT(argv["xyz"], "123");
+    COUT(argv["section.xyz"], "45.6");
+    COUT(argv.HasKey("xyz"), true);
+    COUT(argv.HasKey(".xyz"), false);
+
+    std::string val;
+    COUT(argv.BindValue(val, "xzy"), false);
+    COUT(argv.BindValue(val, "xyz"), true);
+    COUT(val, "123");
+
+    int num;
+    COUT(argv.BindValue(num, "xyz"), true);
+    COUT(num, 123);
+
+    double dnum;
+    COUT(argv.BindValue(dnum, "section.xyz"), true);
+    COUT(dnum, 45.6);
+}

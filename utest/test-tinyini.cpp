@@ -1,5 +1,18 @@
 #include "couttast.h"
 #include "tinyini.h"
+#include "tastargv.hpp"
+#include "coutstd.hpp"
+
+/// operator<< overload for tast::CTinyCli in global namesapce.
+std::ostream& operator<<(std::ostream& os, const tast::CTinyCli& cli);
+
+std::ostream& operator<<(std::ostream& os, const tast::CTinyCli& cli)
+{
+    os << "...\n";
+    os << "option: " << cli.m_mapOption << "\n";
+    os << "argument: " << cli.m_vecArg;
+    return os;
+}
 
 DEF_TAST(tinyini_line, "test parse from lines")
 {
@@ -15,36 +28,31 @@ DEF_TAST(tinyini_line, "test parse from lines")
             "section.abc=foo"
             });
 
+    tast::CTastArgv argv(&ini);
+
+    COUT(argv["xyz"], "123");
+    COUT(argv["xzy"].empty(), true);
+    COUT(argv["flag"], "--");
+    COUT(argv["vv"], "-");
+
     int xyz = 0;
-    bool has_xyz = ini.GetValue(xyz, "xyz");
+    bool has_xyz = argv.BindValue(xyz, "xyz");
     COUT(has_xyz, true);
     COUT(xyz, 123);
 
     std::string abc;
-    bool has_abc = ini.GetValue(abc, "abc");
+    bool has_abc = argv.BindValue(abc, "abc");
     COUT(has_abc, true);
     COUT(abc, "val");
 
     {
         int xyz = 0;
-        bool has_xyz = ini.GetValue(xyz, "section", "xyz");
+        bool has_xyz = argv.BindValue(xyz, "section.xyz");
         COUT(has_xyz, true);
         COUT(xyz, 456);
 
         std::string abc;
-        bool has_abc = ini.GetValue(abc, "section", "abc");
-        COUT(has_abc, true);
-        COUT(abc, "foo");
-    }
-
-    {
-        int xyz = 0;
-        bool has_xyz = ini.GetValue(xyz, "section.xyz");
-        COUT(has_xyz, true);
-        COUT(xyz, 456);
-
-        std::string abc;
-        bool has_abc = ini.GetValue(abc, "section.abc");
+        bool has_abc = argv.BindValue(abc, "section.abc");
         COUT(has_abc, true);
         COUT(abc, "foo");
     }
@@ -61,18 +69,26 @@ DEF_TAST(tinyini_file, "test read from file")
     COUT_ASSERT(bLoadFile, true);
     COUT(ini);
 
-    int xyz = 0;
-    ini.GetValue(xyz, "xyz");
-    COUT(xyz, 123);
-    ini.GetValue(xyz, "section.xyz");
-    COUT(xyz, 456);
-    ini.GetValue(xyz, "another.xyz");
-    COUT(xyz, 789);
+    {
+        tast::CTastArgv argv(&ini);
 
-    auto& argv = ini.m_vecArg;
-    COUT(argv.size(), 3);
-    COUT(argv[0], "hello");
-    COUT(argv.back(), "world");
+        int xyz = 0;
+        argv.BindValue(xyz, "xyz");
+        COUT(xyz, 123);
+        argv.BindValue(xyz, "section.xyz");
+        COUT(xyz, 456);
+        argv.BindValue(xyz, "another.xyz");
+        COUT(xyz, 789);
+
+        COUT(argv[0], "hello");
+    }
+
+    {
+        auto& argv = ini.m_vecArg;
+        COUT(argv.size(), 3);
+        COUT(argv[0], "hello");
+        COUT(argv.back(), "world");
+    }
 }
 
 DEF_TAST(tinycli_option, "test access cli option with macro")
@@ -87,23 +103,19 @@ DEF_TAST(tinycli_option, "test access cli option with macro")
     COUT(nCountAfter, nCountBefore + 1);
 }
 
-// argument should include `global` to run this case, and then view cli.
-DEF_TOOL(tinycli_global, "test global cli merged with ini")
+DEF_TAST(tinycli_global, "test global cli merged with ini")
 {
     int xyz = 0;
-    tast::GetOption("xyz", xyz);
+    BIND_ARGV(xyz);
     COUT(xyz, 123);
-    tast::GetOption("section.xyz", xyz);
+    BIND_ARGV(xyz, "section.xyz");
     COUT(xyz, 456);
-    tast::GetOption("another.xyz", xyz);
+    BIND_ARGV(xyz, "another.xyz");
     COUT(xyz, 789);
 
-    auto& argv = tast::GetArguments();
+    auto& argv = TAST_ARGV.Argument();
     COUT(argv);
 
     COUT(*tast::CTastMgr::GetInstance());
-
-    DESC("sleep 1 second, view the run time");
-    sleep(1);
 }
 
