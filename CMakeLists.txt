@@ -83,18 +83,21 @@ endif()
 
 # Only install this necessary header files to include/couttast
 set(COUTTAST_HEADER
-    include/couttast.h
     include/tinytast.hpp
+    include/couttast.hpp
     include/tinymain.hpp
     include/coutstd.hpp
     include/extra-macros.hpp
     include/gtest-macros.hpp
     include/logprint.hpp
-    include/tast_util.hpp
     include/private-access.hpp
     include/classtast.hpp
     include/tastargv.hpp
+    include/couttast.h
     include/tinyini.h
+    include/systemtast.h
+    include/xmltast.h
+    include/file-compare.h
 )
 
 # package config

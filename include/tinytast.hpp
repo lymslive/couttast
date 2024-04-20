@@ -633,4 +633,7 @@ struct CStatement
 /// Note `TAST_OPTION[key]` may insert with empty value when key not exist.
 #define TAST_OPTION G_TASTMGR->m_mapOption
 
+/// Conditional compile macro for unit test program.
+#define HAS_UNIT_TEST 1
+
 #endif /* end of include guard: TINYTAST_HPP__ */

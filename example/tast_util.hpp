@@ -1,8 +1,7 @@
 #ifndef TAST_UTIL_HPP__
 #define TAST_UTIL_HPP__
-// DEPRECATED: too simple version v0.1, you may use higher one for larger test.
-// Please use tinytast.hpp for header only, 
-// or couttast.h when link with libcouttast.a
+// Back up the simple version v0.1, you may use higher one for larger test.
+// Please use tinytast.hpp for header only, or couttast.h when link with libcouttast.a
 #include <cstdio>
 #include <iostream>
 

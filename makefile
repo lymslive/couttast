@@ -74,7 +74,7 @@ test: $(UTEST_BIN) $(UTEST_MIN_BIN)
 	cd $(UTEST_DIR) && ../$(UTEST_BIN)
 
 PREFIX ?= $(HOME)
-INSTALL_HEADER = include/*.hpp include/couttast.h
+INSTALL_HEADER = include/*.hpp include/*.h
 INSTALL_INC = $(PREFIX)/include/couttast
 INSTALL_LIB = $(PREFIX)/lib
 install:

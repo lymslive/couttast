@@ -8,8 +8,12 @@
 #define EXTRA_MACROS_HPP__
 
 #include "tinytast.hpp"
-#include "gtest-macros.hpp"
-#include "classtast.hpp"
+
+/// Make the function which embrace this marco only be called once.
+#define CALL_FUNCTION_ONCE(...) \
+    static bool once_ = false; \
+    if (once_) { return __VA_ARGS__; } \
+    once_ = true
 
 /// Expect to have `count` of errors by now, and reset to 0.
 /// May used when failed statement is intentional and then make the case pass.
