@@ -1,5 +1,6 @@
 #include "tinytast.hpp"
 #include "extra-macros.hpp"
+#include "gtest-macros.hpp"
 #include <exception>
 
 DEF_TOOL(tinytast_cout, "test cout output control, contains failed statement")

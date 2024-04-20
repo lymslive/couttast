@@ -50,7 +50,7 @@ UTEST_OBJ_NODIR = $(UTEST_SRC_NODIR:%.cpp=%.o)
 
 UTEST_OBJ_ALL = $(addprefix $(OBJ_DIR)/, $(UTEST_OBJ_NODIR))
 $(UTEST_OBJ_ALL): $(OBJ_DIR)/%.o : $(UTEST_DIR)/%.cpp
-	$(CXX) -c $(CXXFLAGS) $(INCLUDE) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) $(INCLUDE) -I./src -o $@ $<
 
 $(UTEST_BIN) : $(UTEST_OBJ_ALL)
 	$(CXX) -o $@ $(CXXFLAGS) $^ -lcouttast -L./lib
