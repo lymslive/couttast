@@ -62,9 +62,21 @@ public:
         }
     }
 
+    /// Print a tip information if loaded config file.
+    void ConfigTip()
+    {
+        auto it = w_pConfig->m_mapOption.find("config");
+        if (it != w_pConfig->m_mapOption.end())
+        {
+            std::string& strIniFile = it->second;
+            DESC("load config: %s", strIniFile.c_str());
+        }
+    }
+
     /// Move cli argument into the tast manager.
     void MoveArgument()
     {
+        ConfigTip();
         w_pTastMgr->m_mapOption.swap(w_pConfig->m_mapOption);
         w_pTastMgr->m_vecArg.swap(w_pConfig->m_vecArg);
         if (!m_config.cout.empty())
@@ -164,11 +176,6 @@ bool CTastAgent::ZeroMode(int& exitCode)
         return false;
     }
 
-    if (colour_support())
-    {
-        w_pTastMgr->SetPrint(colour_print);
-    }
-
     COUT_DBG("no argument, just as call RUN_TAST");
     exitCode = w_pTastMgr->RunTast();
     return true;
@@ -225,6 +232,11 @@ int CTastAgent::LocalRun()
 
 int CTastAgent::Run()
 {
+    if (m_config.colour != 'n' && colour_support() || m_config.colour == 'a')
+    {
+        w_pTastMgr->SetPrint(colour_print);
+    }
+
     int exitCode = 0;
     if (ZeroMode(exitCode) || SubCommand(exitCode) || SkipRun(exitCode))
     {
@@ -233,11 +245,6 @@ int CTastAgent::Run()
 
     Filter();
     MoveArgument();
-
-    if (m_config.colour != 'n' && colour_support() || m_config.colour == 'a')
-    {
-        w_pTastMgr->SetPrint(colour_print);
-    }
 
     if (m_config.job >= 0 && m_tastList.size() >= MINLIST_TO_PROCESS)
     {

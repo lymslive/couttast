@@ -50,7 +50,7 @@ std::string FindConfig(const CTinyIni& cfg)
         CheckLeadHome(strIniFile);
         if (0 != ::access(strIniFile.c_str(), R_OK))
         {
-            fprintf(stderr, "failed to load config: %s\n", strIniFile.c_str());
+            fprintf(stderr, "can not read the specified config file: %s\n", strIniFile.c_str());
             strIniFile.clear();
             ::exit(1);
         }
@@ -84,11 +84,19 @@ int main(int argc, char* argv[])
     std::string strIniFile = FindConfig(cfg);
     if (!strIniFile.empty())
     {
-        fprintf(stderr, "load config: %s\n", strIniFile.c_str());
         CTinyIni iniTemp;
-        iniTemp.LoadIni(strIniFile);
-        CheckChdir(iniTemp);
-        cfg.Merge(iniTemp);
+        if (iniTemp.LoadIni(strIniFile))
+        {
+            cfg.m_mapOption.emplace("config", strIniFile);
+            CheckChdir(iniTemp);
+            cfg.Merge(iniTemp);
+        }
+        else
+        {
+            fprintf(stderr, "failed to load config: %s\n", strIniFile.c_str());
+            strIniFile.clear();
+            ::exit(1);
+        }
     }
 
     const char* firstArg = nullptr;
