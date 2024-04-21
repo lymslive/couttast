@@ -1,6 +1,7 @@
 #include "parallel.h"
 #include "filter.h"
 #include "tastargv.hpp"
+#include "coutdebug.hpp"
 
 #include <unordered_map>
 #include <fstream>
@@ -411,7 +412,7 @@ struct CProcessWork
             }
             else if (pid > 0) // current parent process
             {
-                DESC("forked child process[%d] to test %d cases", pid, m_range[i].count());
+                COUT_DBG("forked child process[%d] to test %d cases", pid, m_range[i].count());
             }
             else // forked child process
             {

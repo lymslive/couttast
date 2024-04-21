@@ -16,6 +16,11 @@ AR = ar -crs
 CXX = g++
 CXXFLAGS = -std=c++11 -fPIC
 
+ifdef debug
+CXXFLAGS := $(CXXFLAGS) -g -D_DEBUG
+endif
+
+
 INCLUDE = -I./include
 LIBRARY = -ldl
 

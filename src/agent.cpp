@@ -3,6 +3,7 @@
 #include "filter.h"
 #include "parallel.h"
 #include "colour.h"
+#include "coutdebug.hpp"
 
 namespace tast
 {
@@ -57,6 +58,7 @@ public:
         if (m_tastList.empty())
         {
             filter_tast(w_pTastMgr->GetTastPool(), m_tastList, m_config);
+            COUT_VAR(m_tastList.size());
         }
     }
 
@@ -167,7 +169,7 @@ bool CTastAgent::ZeroMode(int& exitCode)
         w_pTastMgr->SetPrint(colour_print);
     }
 
-    // no argument, quick call RUN_TAST
+    COUT_DBG("no argument, just as call RUN_TAST");
     exitCode = w_pTastMgr->RunTast();
     return true;
 }
@@ -187,7 +189,7 @@ bool CTastAgent::SubCommand(int& exitCode)
 
     MoveArgument();
 
-    // only run this tast
+    COUT_DBG("in sub command only run this tast and depress much output");
     w_pTastMgr->CoutDisable(COUT_BIT_HEAD);
     w_pTastMgr->CoutDisable(COUT_BIT_FOOT);
     w_pTastMgr->CoutDisable(COUT_BIT_LINE);
@@ -239,10 +241,12 @@ int CTastAgent::Run()
 
     if (m_config.job >= 0 && m_tastList.size() >= MINLIST_TO_PROCESS)
     {
+        COUT_DBG("would run in multiple process: %d", m_config.job);
         return ProcessRun();
     }
     else
     {
+        COUT_DBG("would run in single process mode");
         return LocalRun();
     }
 }

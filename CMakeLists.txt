@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(couttast_VERSION_MAJOR "0")
 set(couttast_VERSION_MINOR "6")
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
+
 #include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -97,6 +99,7 @@ set(COUTTAST_HEADER
     include/private-access.hpp
     include/classtast.hpp
     include/tastargv.hpp
+    include/coutdebug.hpp
     include/couttast.h
     include/tinyini.h
     include/systemtast.h
@@ -146,3 +149,4 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/couttastConfigVersion.cmake
     DESTINATION lib/cmake/couttast
 )
+
