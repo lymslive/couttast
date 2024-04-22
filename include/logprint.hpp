@@ -331,7 +331,7 @@ struct CDefaultLog
  * @note the `level` and `context` is public member that can set directlly if
  * needed.
  * */
-template <typename logT, int TOPIC = 0>
+template <typename logT, uint32_t TOPIC = 0>
 struct CLoggerT
 {
     /// the min log level setting, any log whose level is less won't write
