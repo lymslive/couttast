@@ -130,7 +130,8 @@ int Execute(const std::string& command, std::string& output)
         output += buffer.data();
     }
 
-    int exitCode = WEXITSTATUS(pclose(pipe));
+    int exitCode = pclose(pipe);
+    exitCode = WEXITSTATUS(exitCode);
     return exitCode;
 }
 
