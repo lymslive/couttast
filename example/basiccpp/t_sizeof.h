@@ -80,8 +80,8 @@ class MEmpty : public CEmpty
 {
 public:
     MEmpty() {}
-    int method(int) {}
-    int more(int) {}
+    int method(int) { return 0; }
+    int more(int) { return 0; }
 };
 
 class CStatic

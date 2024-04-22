@@ -94,7 +94,8 @@ DEF_TAST(sizeofC_struct, "结构体大小")
 	COUT(&SNumberMixD::d);
 	COUT(&SNumberMixD::s);
 
-	printf("printf address SNumberMixD: %d %d %d\n", &SNumberMixD::c, &SNumberMixD::d, &SNumberMixD::s);
+    // try any cast will cause compile error, while no case just warnning.
+    printf("printf address SNumberMixD: %d %d %d\n", &SNumberMixD::c, &SNumberMixD::d, &SNumberMixD::s);
 
 	DESC("结构体对齐压缩");
 	COUT(sizeof(SNumberPack), 18);
