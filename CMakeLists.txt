@@ -50,6 +50,7 @@ add_executable(utCoutTast
     utest/test-tinytast.cpp
     utest/test-file-compare.cpp
     utest/test-classtast.cpp
+    utest/test-unittast.cpp
     utest/test-systemtast.cpp
 )
 
@@ -65,6 +66,7 @@ target_link_libraries(utCoutTast
 add_executable(utCxx98Tast
     utest/test-tinytast.cpp
     utest/test-classtast.cpp
+    utest/test-unittast.cpp
 )
 
 target_compile_definitions(utCxx98Tast PRIVATE USE_TINY_MAIN)
@@ -91,15 +93,16 @@ endif()
 set(COUTTAST_HEADER
     include/tinytast.hpp
     include/couttast.hpp
-    include/tinymain.hpp
+    include/unittast.hpp
+    include/classtast.hpp
+    include/tastargv.hpp
     include/coutstd.hpp
     include/extra-macros.hpp
     include/gtest-macros.hpp
+    include/tinymain.hpp
+    include/coutdebug.hpp
     include/logprint.hpp
     include/private-access.hpp
-    include/classtast.hpp
-    include/tastargv.hpp
-    include/coutdebug.hpp
     include/couttast.h
     include/tinyini.h
     include/systemtast.h
