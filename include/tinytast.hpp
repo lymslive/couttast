@@ -175,6 +175,7 @@ class CTastMgr : public CTinyCli
 
     typedef void (*PrintFun)(const char* str);
     PrintFun m_fnPrint;  //< custome print function for output
+    const CTastCase* m_tastRun; //< the current running test case
 
     friend class CStatement;
     friend class CTastBuilder;
@@ -187,12 +188,13 @@ public: // constructor
 
     CTastMgr() : m_beginTime(0), m_endTime(0),
         m_currentFail(0), m_passedCase(0), m_failedCase(0),
-        m_coutMask(COUT_MASK_ALL), m_fnPrint(NULL)
+        m_coutMask(COUT_MASK_ALL), m_fnPrint(NULL), m_tastRun(NULL)
     {
         m_tastPool.reserve(128);
     }
 
     const std::vector<CTastCase>& GetTastPool() const { return m_tastPool; }
+    const CTastCase* GetTastRun() const { return m_tastRun; }
 
 public: // output
     void CoutEnable (int bit) { m_coutMask = m_coutMask | bit; }
@@ -306,6 +308,7 @@ public: // how to run tast
         if (bOnlyAuto && !tast.m_autoRun) { return; }
 
         PreRunTast(tast.m_name);
+        m_tastRun = &tast;
         tast.m_run();
         PostRunTast(tast.m_name);
     }

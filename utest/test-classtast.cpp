@@ -14,6 +14,16 @@ struct MySuite : public tast::CTastSuite
     std::string strValue;
     SComplex complexValue;
 
+    static void setupFirst()
+    {
+        DESC("MySuite setupFirst");
+    }
+
+    static void teardownLast()
+    {
+        DESC("MySuite teardownLast");
+    }
+
     MySuite()
     {
         DESC("MySuite constructor");
@@ -24,13 +34,13 @@ struct MySuite : public tast::CTastSuite
         DESC("MySuite destructor");
     }
 
-    virtual void setup()
+    void setup()
     {
         DESC("MySuite::setup");
         strValue = "abcdefg";
     }
 
-    virtual void teardown()
+    void teardown()
     {
         DESC("MySuite::teardown");
     }
@@ -155,3 +165,6 @@ DEF_TAST(tastargv, "test argv managemant")
     COUT(argv.BindValue(dnum, "section.xyz"), true);
     COUT(dnum, 45.6);
 }
+
+#if __cplusplus >= 201103L
+#endif
