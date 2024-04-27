@@ -167,4 +167,37 @@ DEF_TAST(tastargv, "test argv managemant")
 }
 
 #if __cplusplus >= 201103L
+
+struct SuiteEmpty
+{
+};
+
+struct SuiteLabel
+{
+    int left = 1;
+    int right = 1;
+};
+
+DEC_TAST(SuiteEmpty, tast, "test with empty suite class")
+{
+    DESC("it works");
+}
+
+DEC_TOOL(SuiteEmpty, tool, "test with empty suite class")
+{
+    DESC("it works");
+}
+
+DEC_TAST(SuiteLabel, tast, "test with trival suite class")
+{
+    DESC("it works");
+    COUT(left + right, 2);
+}
+
+DEC_TOOL(SuiteLabel, tool, "test with trival suite class")
+{
+    DESC("it works");
+    COUT(left + right, 2);
+}
+
 #endif

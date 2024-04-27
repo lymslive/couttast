@@ -52,6 +52,7 @@ add_executable(utCoutTast
     utest/test-classtast.cpp
     utest/test-unittast.cpp
     utest/test-systemtast.cpp
+    utest/test-rename-macros.cpp
 )
 
 target_include_directories(utCoutTast
@@ -67,6 +68,7 @@ add_executable(utCxx98Tast
     utest/test-tinytast.cpp
     utest/test-classtast.cpp
     utest/test-unittast.cpp
+    utest/test-rename-macros.cpp
 )
 
 target_compile_definitions(utCxx98Tast PRIVATE USE_TINY_MAIN)
@@ -99,6 +101,7 @@ set(COUTTAST_HEADER
     include/coutstd.hpp
     include/extra-macros.hpp
     include/gtest-macros.hpp
+    include/rename-macros.hpp
     include/tinymain.hpp
     include/coutdebug.hpp
     include/logprint.hpp
