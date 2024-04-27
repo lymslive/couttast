@@ -105,6 +105,7 @@ set(COUTTAST_HEADER
     include/private-access.hpp
     include/couttast.h
     include/tinyini.h
+    include/agent.h
     include/systemtast.h
     include/xmltast.h
     include/file-compare.h

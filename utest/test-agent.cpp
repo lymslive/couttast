@@ -73,10 +73,17 @@ void RandSleep()
 
 DEF_TOOL(avg_fun_long, "test average time of function, may long time")
 {
+    DESC("use arverage_time() in default argument");
     int64_t us = tast::average_time(RandSleep);
     COUT(us);
 
+    DESC("use arverage_time() with optional argument (100,0)");
     us = tast::average_time(RandSleep, 100, 0);
+    COUT(us);
+    COUT(1.0 * us / (125 * 1000), 1.0, 0.1);
+
+    DESC("use TIME_TAST marco instead");
+    us = TIME_TAST(RandSleep, 100, 0);
     COUT(us);
     COUT(1.0 * us / (125 * 1000), 1.0, 0.1);
 }

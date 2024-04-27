@@ -40,6 +40,8 @@ int agent_run(CTastMgr& stTastMgr, CTinyIni& cfg, const char* firstArg);
  * @note The macro `TIME_TAST` may not thread safe, it is better to use this
  * function manually to time another function, if want to run many test cases
  * in multiple threads.
+ * @note In the target function measured by this function, should not use
+ * TIME_TIC or TIME_TOC, while by TIME_TAST may be used.
  * */
 int64_t average_time(voidfun_t fun, int times = 10, int msleep = 1000);
 

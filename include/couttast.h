@@ -12,6 +12,7 @@
 
 #include "tinytast.hpp"
 #include "tinyini.h"
+#include "agent.h"
 #include "xmltast.h"
 #include "systemtast.h"
 #include "file-compare.h"

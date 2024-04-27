@@ -325,18 +325,15 @@ public: // how to run tast
         return NULL;
     }
 
-    int64_t TimeTast(const std::string& name, int times = 10, int msleep = 1000)
+    int64_t TimeTast(voidfun_t run, int times = 10, int msleep = 1000)
     {
-        CTastCase* pTastCase = FindTastCase(name);
-        if (pTastCase == NULL) { return 0; }
-        Print(COUT_BIT_HEAD, "## time %s() with %d runs", name.c_str(), times);
         int64_t beginTimeSave = m_beginTime;
         int64_t endTimeSave = m_endTime;
         int64_t timeTotal = 0;
         for (int i = 0; i < times; ++i)
         {
             SetBeginTime();
-            pTastCase->m_run();
+            run();
             int64_t passTime = SetEndTime();
             timeTotal += passTime;
             if (msleep > 0)
@@ -348,8 +345,16 @@ public: // how to run tast
         m_beginTime = beginTimeSave;
         m_endTime = endTimeSave;
         int64_t timeAvg = times > 0 ? timeTotal/times : 0;
-        Print(COUT_BIT_FOOT, ".. time: %d; average %lld us; totol: %lld us", times, timeAvg, timeTotal);
+        Print(COUT_BIT_FOOT, ".. time: %d; average %lld us; total: %lld us", times, timeAvg, timeTotal);
         return timeAvg;
+    }
+
+    int64_t TimeTast(const std::string& name, int times = 10, int msleep = 1000)
+    {
+        CTastCase* pTastCase = FindTastCase(name);
+        if (pTastCase == NULL) { return 0; }
+        Print(COUT_BIT_HEAD, "## time %s() with %d runs", name.c_str(), times);
+        return TimeTast(pTastCase->m_run, times, msleep);
     }
 
 public: // what tast to run
@@ -626,10 +631,12 @@ struct CStatement
 /// Set the end time and return the elapsed time(us) since `TIC`.
 #define TIME_TOC G_TASTMGR->SetEndTime()
 
-/// Run a named tast several times and return the average elapse microsecond. 
+/// Run named tast or void function several times, return the average elapse microsecond. 
 /// 1-3 arguemnt: TIME_TAST(name, times=10, msleep=1000)
 /// The 3rd argument means sleep several milli-second after each run and print
 /// some verbose message, pass 0 to suppress this behavior.
+/// In the target tast or void function, may use TIME_TIC or(and) TIM_TOC to
+/// reduce the measured time range.
 #define TIME_TAST(...) G_TASTMGR->TimeTast(__VA_ARGS__)
 
 /// Access cli options stored in a map, may useful in body of `DEF_TOOL`. 
