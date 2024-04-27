@@ -165,7 +165,7 @@ struct CFilterTast
             }
             else if (match == 'f')
             {
-                if (item.m_autoRun)
+                if (item.m_autoRun || config.all)
                 {
                     filter.push_back(&item);
                 }
