@@ -2,7 +2,12 @@
  * @file classtast.hpp
  * @author lymslive
  * @date 2024-04-10
- * @brief Support custome test suite class for DEC_TAST.
+ * @brief Support custome test suite class to group relative test cases.
+ * @details Each test case in the suite class, defined by `DEC_TAST(suite, ..)`
+ *  implies a class derived from suite, and can use the same data  member
+ *  and method, but within separate fresh instance so not affect each other.
+ *  However, there can be also static data and methods that do need share in
+ *  more test case. 
  * */
 #pragma once
 #ifndef CLASSTAST_HPP__
@@ -36,28 +41,30 @@ struct CTastSuite
     static void teardownLast() {}
 };
 
-/// Helper class for each custome test suite class or file unit or namespace
-/// to track how many test cases in it have been defined and runned.
+/// Helper class for each custome test suite class tp track its state.
 template <typename suiteT>
-struct CTastCounter
+struct CSuiteState
 {
-    int tastCount;
-    int runCount;
-    CTastCounter() : tastCount(0), runCount(0) {}
+    int tastCount; //< Count of tast(but not tool) defined in this suite.
+    int runCount;  //< Count of tast finished run.
+    bool ready;    //< The shared setupFirst function has been called.
 
-    static CTastCounter* GetInstance()
+    CSuiteState() : tastCount(0), runCount(0), ready(false) {}
+
+    static CSuiteState* GetInstance()
     {
-        static CTastCounter instance;
+        static CSuiteState instance;
         return &instance;
     }
 
-    struct Increase
+    /// Add count of tast in the suite.
+    struct AddTast
     {
-        Increase(bool autoRun)
+        AddTast(bool autoRun)
         {
             if (autoRun)
             {
-                CTastCounter<suiteT>::GetInstance()->tastCount++;
+                CSuiteState<suiteT>::GetInstance()->tastCount++;
             }
         }
     };
@@ -66,10 +73,12 @@ struct CTastCounter
 template <typename suiteT>
 void run_suite_setup_uncheck(suiteT* ptr)
 {
-    static bool run = false;
-    if (run) { return; }
-    run = true;
-    suiteT::setupFirst();
+    CSuiteState<suiteT>* pSuite = CSuiteState<suiteT>::GetInstance();
+    if (!pSuite->ready)
+    {
+        suiteT::setupFirst();
+        pSuite->ready = true;
+    }
 }
 
 template <typename suiteT>
@@ -79,11 +88,12 @@ void run_suite_teardown_uncheck(suiteT* ptr)
     {
         return;
     }
-    CTastCounter<suiteT>* pInstance = CTastCounter<suiteT>::GetInstance();
-    pInstance->runCount++;
-    if (pInstance->runCount >= pInstance->tastCount)
+    CSuiteState<suiteT>* pSuite = CSuiteState<suiteT>::GetInstance();
+    pSuite->runCount++;
+    if (pSuite->runCount >= pSuite->tastCount)
     {
         suiteT::teardownLast();
+        pSuite->ready = false;
     }
 }
 
@@ -222,7 +232,7 @@ void tast_suite_run()
 #define DEC_TAST_IMPL(suite, name, autoRun, ...) \
     struct STAST_CLASS(suite, name) : public suite { void run(); }; \
     static tast::CTastBuilder STAST_BUILDER(suite,name)(STAST_RUNNER(suite,name), STAST_NAME(suite,name), __FILE__, __LINE__, autoRun, ## __VA_ARGS__); \
-    static tast::CTastCounter<suite>::Increase STAST_COUNTER(suite,name)(autoRun); \
+    static tast::CSuiteState<suite>::AddTast STAST_COUNTER(suite,name)(autoRun); \
     void STAST_CLASS(suite, name)::run()
 
 /// Similar `DEF_TAST` but for custome test suite class.
@@ -230,7 +240,6 @@ void tast_suite_run()
 #define DEC_TAST(suite, name, ...) DEC_TAST_IMPL(suite, name, true, ## __VA_ARGS__)
 
 /// Similar `DEF_TOOL` but for custome test suite class.
-/// The suite class can override `help()` method for sub-command tool.
 #define DEC_TOOL(suite, name, ...) DEC_TAST_IMPL(suite, name, false, ## __VA_ARGS__)
 
 #endif /* end of include guard: CLASSTAST_HPP__ */
