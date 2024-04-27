@@ -16,8 +16,6 @@ struct CFilterTast
     std::unordered_set<TastEntry> keys; //< alread outputed test case
 
     std::vector<std::string> subs;  //< arguments to subtract cases -xxx
-    bool optAll = false;            //< --all
-    bool optNoTool = false;         //< --notool
 
     CFilterTast(const TastPool& pool, TastList& filter, const CTastConfig& config_in)
         : input(pool), output(filter), config(config_in)
@@ -164,6 +162,13 @@ struct CFilterTast
             if (match == '=')
             {
                 return AddTast(&item);
+            }
+            else if (match == 'f')
+            {
+                if (item.m_autoRun)
+                {
+                    filter.push_back(&item);
+                }
             }
             else if (match != 0)
             {

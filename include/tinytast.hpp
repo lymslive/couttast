@@ -361,7 +361,7 @@ public: // what tast to run
         {
             if (it->MatchFile(file, line))
             {
-                RunTast(*it);
+                RunTast(*it, true);
             }
         }
     }

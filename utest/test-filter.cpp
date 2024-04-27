@@ -109,7 +109,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         cfg.m_vecArg.push_back("ft-1.cpp");
         tast::TastList tastCase;
         tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
-        COUT(tastCase.size(), 10);
+        COUT(tastCase.size(), 9);
     }
 
     DESC("filter: ft-1.cpp:50 # file:line");
@@ -118,7 +118,7 @@ DEF_TAST(filter_basic, "test filter by [+]name and -name")
         cfg.m_vecArg.push_back("ft-1.cpp:50");
         tast::TastList tastCase;
         tast::filter_tast(stTastMgr.GetTastPool(), tastCase, cfg);
-        COUT(tastCase.size(), 5);
+        COUT(tastCase.size(), 4);
     }
 
     DESC("filter: f # single char");
