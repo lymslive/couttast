@@ -1,13 +1,16 @@
 # From taste to test: a lightweight unit testing framework
 
+couttast is a simple, lightweight C++ unit testing library and framework. Can be used to quickly build command-line-based test program, but not just unit for tests. See [wiki] (https://github.com/lymslive/couttast/wiki) for detailed documentation.
+
 ## Functional Overview
 
-* 80% of the core functionality is in a single header file: [tinytast.hpp](include/tinytast.hpp) can be used as a header-only library.
+* Most of the core functionality is in a single header file: [tinytast.hpp](include/tinytast.hpp) can be used as a header-only library.
   + Use a unified `COUT` macro to print the value of the expression or compare the expected result to provide a statement level test judgment;
   + Using `DEF_TAST` macros to define unit test cases, the function body can be simply equivalent to the writing of a `void()` function;
   + Only the macro needs to be called `RUN_TAST` in the `main()` entry function to automatically execute the test case and return the number of failed cases;
   + Execute all test cases in sequence when command line parameters are empty, otherwise execute matching test cases according to each parameter;
   + Command line arguments allow you `--list` to view defined test cases and `--cout` control the redundancy of the output information.
+  + And also other `*.hpp` files to extend the header-only library.
 * Many of the extensions are packaged in additional static libraries: `libcouttast.a` .
   + Provide a `main()` function, but the symbol is weak. User-defined `main()` function are still supported;
   + Provide terminal color printing to further increase the readability of output information;
@@ -67,7 +70,7 @@ g++ *.cpp -o utMyProgram
 # May need to specify the header file location with -I
 ```
 
-If you want to use the extended static library to compile the test program, you can change the header file to `#include couttast.h` , and you can omit writing the `main()` function and just focus on writing each test case. The compilation command is roughly as follows:
+If you want to use the extended static library to compile the test program,  you can omit writing the `main()` function and just focus on writing each test case. The compilation command is roughly as follows:
 
 ```bash
 g++ *.cpp -lcouttast -o utMyProgram
@@ -148,6 +151,23 @@ Some of the command-line arguments supported by these built unit test programs a
 
 In addition, because the dynamic link library approach is more complex and pitfalls, it is recommended to use the first two methods to build a stand-alone unit test program without special requirements.
 
+### Custom Override Weak Symbol for main Function
+
+The entry function `main()` defined in `libcouttast.a` is roughly as follows:
+
+```cpp
+#define WEAK_SYMBOL __attribute__((weak))
+int WEAK_SYMBOL main(int argc, char* argv[])
+{
+    return tast::main(argc, argv);
+}
+```
+
+This means that while linking to `libcouttast.a`, you can still define your own `main()` functions in your test program if necessary, overriding the `main()` function provided by default. For example, do some other preprocessing before calling `tast::main()`.
+
+Also, the only `main()` function in the base library `libtinytast.a` is also weak symbol and can be overridden. It's just that now that you've written the `main()` function, there's no need to link `libtinytast.a` , as it doesn't contain many other fancy extensions.
+
+<!-- moved to wiki
 ## Unit Test Library Macro Definition Details
 
 The functionality of this unit test library is mainly based on the design of several macros, and it is also the features that are often used to write each unit test case.
@@ -340,22 +360,6 @@ Some functionalities added by the extension library `libcouttast.a` are also con
 
 ## Special Usage of Unit Test Program
 
-### Custom Override Weak Symbol for main Function
-
-The entry function `main()` defined in `libcouttast.a` is roughly as follows:
-
-```cpp
-#define WEAK_SYMBOL __attribute__((weak))
-int WEAK_SYMBOL main(int argc, char* argv[])
-{
-    return tast::main(argc, argv);
-}
-```
-
-This means that while linking to `libcouttast.a`, you can still define your own `main()` functions in your test program if necessary, overriding the `main()` function provided by default. For example, do some other preprocessing before calling `tast::main()`.
-
-Also, the only `main()` function in the base library `libtinytast.a` is also weak symbol and can be overridden. It's just that now that you've written the `main()` function, there's no need to link `libtinytast.a` , as it doesn't contain many other fancy extensions.
-
 ### Command Line Tool that Emulates Subcommand Mode
 
 Generally, there are multiple unit test cases in a test program, and a unique specific test case can be precisely selected to run by specifying the case name on the command line, which is equivalent to a command line program containing many subcommand patterns, and each unit test case is considered as a subcommand.
@@ -483,6 +487,7 @@ DEF_TOOL(avgtime, "test average time")
 Functional tests can even be physically separated from performance tests and compiled into different executable test programs. In a performance test program, you can simply place several `TIME_TAST` calls in the `main()` function. Because for performance testing, what it needs is a running time report, which must be analyzed manually, and it is generally impossible to predict or compare the running time.
 
 However, you can use the return value of `TIME_TAST` to compare the relative time consumption of the two algorithms, and you can expect to verify that one algorithm is faster or slower than the other.
+-->
 
 ## Development and Contribution Guidelines
 
@@ -495,9 +500,24 @@ cd utest
 ../build/utCoutTast [--help | --list | test_case]
 ```
 
+Or in the `build/` directory specify the `--cwd` option:
+
+```bash
+./utCoutTast --cwd=../utest
+```
+
 ## Historical Version and Main Change Record
 
-### v0.6
+### v0.6.02
+
+* Optimized the core management of test cases, changed from `map` to `vector` for compact storage, and avoided copying string literals of test case name and file name.
+* Increase the organization scheme of test units and test suites for related test cases, which is conducive to managing a large number of test cases.
+* Optimized the organization of header files, which are divided into three functional levels.
+* Added the ability to test the invocation of external shell commands.
+* Added the ability to configure unit tests that run with differnt data.
+* Other enhancements to unit tests and command line programs.
+
+### v0.6.0
 
 * Add extended static library `libcouttast.a`, mainly including terminal color printing, case filtering enhancement, automatic reading of ini configuration, multi-process parallel and other functions;
 * The original `main()` function-only library was renamed to `libtinytast.a` from `libtast_main.a`;
