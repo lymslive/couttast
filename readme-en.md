@@ -1,6 +1,6 @@
 # From taste to test: a lightweight unit testing framework
 
-couttast is a simple, lightweight C++ unit testing library and framework. Can be used to quickly build command-line-based test program, but not just unit for tests. See [wiki] (https://github.com/lymslive/couttast/wiki) for detailed documentation.
+couttast is a simple, lightweight C++ unit testing library and framework. Can be used to quickly build command-line-based test program, but not just unit for tests. See [wiki](https://github.com/lymslive/couttast/wiki) for detailed documentation.
 
 ## Functional Overview
 
