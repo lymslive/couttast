@@ -2,7 +2,7 @@ name: Build Test and Doxygen
 on:
   push:
     branches:
-      - dev
+      - main
 
 jobs:
   docs:
