@@ -1,5 +1,9 @@
-// A very tiny unit test framework with single header even in C++98
-// lymslive @ 2023-06-17 2024-04-17
+/** 
+ * @file tinytast.hpp
+ * @author lymslive
+ * @date 2024-05-08
+ * @brief A very tiny unit test framework with single header even in C++98.
+ * */
 #ifndef TINYTAST_HPP__
 #define TINYTAST_HPP__
 

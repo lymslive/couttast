@@ -1,5 +1,5 @@
 /**
- * @file file_compare.h
+ * @file file-compare.h
  * @author lymslive
  * @date 2024-03-25
  * @brief Implement COUT_FILE macro to compare tows text files.

@@ -1,3 +1,12 @@
+/** 
+ * @file coutstd.hpp
+ * @author lymslive
+ * @date 2024-05-08
+ * @brief Implement the `<<` operator for some of the mose often used
+ * container in `std::`.
+ * @note Required c++11 or above, and the element type in continer should
+ * support `<<` operator.
+ * */
 #ifndef COUTSTD_HPP__
 #define COUTSTD_HPP__
 
