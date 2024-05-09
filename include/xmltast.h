@@ -34,6 +34,8 @@
 
 namespace tast
 {
+
+/// Namespace to support xml configuration for test case.
 namespace xml
 {
 

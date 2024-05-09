@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <typeinfo>
 
+/// Utility namespace which is named after `std::`.
 namespace utd
 {
 
@@ -70,6 +71,7 @@ inline std::string to_string(const T& val)
 /* ********************************************************************** */
 /// @section implement of utd::sprintf
 
+/// Internal namespace to support other public functionality.
 namespace helper
 {
 

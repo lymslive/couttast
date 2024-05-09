@@ -17,6 +17,7 @@
 #include "systemtast.h"
 #include "file-compare.h"
 
+/// The namespace for core functionality of couttast library. 
 namespace tast
 {
 
@@ -27,4 +28,9 @@ int main(int argc, char* argv[]);
 
 } // end of namespace tast
 
+/** 
+ * @mainpage CoutTast
+ * Couttast is a simple, lightweight C++ unit testing library and framework. 
+ * It can be used to quickly build command-line-based test program, but not just unit for tests. See [wiki](https://github.com/lymslive/couttast/wiki) for detailed documentation in Chinese, where this documentation generated from comment by doxygen is in English.
+ * */
 #endif /* end of include guard: COUT_TAST_H__ */

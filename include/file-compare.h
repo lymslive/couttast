@@ -11,6 +11,8 @@
 
 namespace tast
 {
+
+/// Underlying functionality namespace for custome COUT macro. 
 namespace macro
 {
 
