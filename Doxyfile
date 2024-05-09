@@ -1,0 +1,32 @@
+PROJECT_NAME           = "CoutTast"
+PROJECT_NUMBER         = 0.6.02
+PROJECT_BRIEF          = "A lightweigh C++ unit test library to build command line based test program."
+ALLOW_UNICODE_NAMES    = YES
+#OUTPUT_LANGUAGE        = Chinese
+FULL_PATH_NAMES        = NO
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+
+MARKDOWN_SUPPORT       = YES
+
+BUILTIN_STL_SUPPORT    = YES
+
+QUIET                  = NO
+
+OUTPUT_DIRECTORY       = ./docs
+
+INPUT                  = ./include ./src
+RECURSIVE              = YES
+EXCLUDE                =
+EXAMPLE_PATH           =
+
+SOURCE_BROWSER         = NO
+
+CLANG_ASSISTED_PARSING = NO
+CLANG_OPTIONS          =
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = NO

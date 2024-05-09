@@ -8,5 +8,6 @@
 bin
 lib
 build
+docs
 tast.cout*
 Session*.vim
