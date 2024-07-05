@@ -5,6 +5,10 @@
  * @brief lightweith log front in printf style with type safe (C++11)
  * @lisence MIT
  * */
+#pragma once
+#ifndef LOGPRINT_HPP__
+#define LOGPRINT_HPP__
+
 #include <cstring>
 #include <cstdio>
 #include <string>
@@ -383,10 +387,10 @@ typedef CLoggerT<CDefaultLog> CLogger;
 
 /** pre-defined log macor, can re-define if necessary.
  * @details 
- * - UTD_LOG: write all log with level 0, unless explicly set with unusual level
+ * - COUT_LOG: write all log with level 0, unless explicly set with unusual level
  *   bellow -1.
- * - UTD_LOGX: write log with extra level argument at the beginning.
- * - UTD_DBG: only write log at _DEBUG version.
+ * - COUT_LOGX: write log with extra level argument at the beginning.
+ * - COUT_DBG: only write log at _DEBUG version.
  * */
 #ifndef COUT_LOG
 #define COUT_LOG(format, ...) utd::CLogger::instance().log(0, __FILE__, __LINE__, __FUNCTION__, format, ## __VA_ARGS__)
@@ -402,3 +406,5 @@ typedef CLoggerT<CDefaultLog, 0xdeb0deb0> CDebugLogger;
 #endif
 #endif
 } /* namespace utd */ 
+
+#endif /* end of include guard: LOGPRINT_HPP__ */
