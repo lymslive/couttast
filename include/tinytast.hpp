@@ -491,7 +491,7 @@ struct CLocation
     int line;             //< from __LINE__
 
     CLocation(const char* pFile, int iLine, const char* pFunction)
-        : file(pFile), line(iLine), function(pFunction)
+        : function(pFunction), file(pFile), line(iLine)
     {}
 };
 
