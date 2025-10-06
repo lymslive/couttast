@@ -218,7 +218,11 @@ int CTestReader::TestRun(FnTest fn)
     }
 
     COUT(failed.size());
-    COUT(failed);
+    // Output failed test IDs individually instead of the whole vector
+    for (const auto& id : failed)
+    {
+        COUT(id);
+    }
     return failed.size();
 }
 

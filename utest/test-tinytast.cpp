@@ -151,8 +151,8 @@ DEF_TAST(string_compare, "Test COUT and COUT_PTR difference for const char*")
     const char* str1 = "hello";
     const char* str2 = "hello"; 
     const char* str3 = "world";
-    const char* str4 = new char[6]; // 动态分配，确保不同指针
-    ::strcpy(const_cast<char*>(str4), "hello");
+    char* str4 = new char[6]; // 动态分配，确保不同指针
+    ::strcpy(str4, "hello");
     
     DESC("Test COUT behavior - compares string content using strcmp");
     COUT(str1, str2);      // 相同内容，相同指针 - 应该通过
@@ -162,7 +162,7 @@ DEF_TAST(string_compare, "Test COUT and COUT_PTR difference for const char*")
     DESC("Test COUT_PTR behavior - compares pointer addresses");
     COUT_PTR(str1, str1);  // 相同指针 - 应该通过
     COUT_PTR(str1 == str2, true);  // 相同指针（字面量优化） - 验证指针相同
-    COUT_PTR(str1 == str4, false); // 不同指针 - 验证指针不同
+    COUT_PTR(str1 == (const char*)str4, false); // 不同指针 - 验证指针不同
     
     DESC("Test with string literals");
     COUT("hello", "hello");        // 相同内容 - 应该通过（比较内容）
