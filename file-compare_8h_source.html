@@ -91,8 +91,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacetast.html">tast</a></div>
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>{</div>
 <div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
-<div class="foldopen" id="foldopen00016" data-start="{" data-end="}">
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="namespacetast_1_1macro.html">   16</a></span><span class="keyword">namespace </span>macro</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">namespace </span>macro</div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>{</div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="keywordtype">bool</span> <a class="code hl_function" href="namespacetast_1_1macro.html#a8c91d93c53a9e975b0eda0dea3227638">cout_file</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structtast_1_1CLocation.html">tast::CLocation</a>&amp; location, <span class="keyword">const</span> std::string&amp; file);</div>
@@ -100,7 +99,6 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keywordtype">bool</span> <a class="code hl_function" href="namespacetast_1_1macro.html#a8c91d93c53a9e975b0eda0dea3227638">cout_file</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structtast_1_1CLocation.html">tast::CLocation</a>&amp; location, <span class="keyword">const</span> std::string&amp; file, <span class="keyword">const</span> std::string&amp; <a class="code hl_define" href="rename-macros_8hpp.html#a5b1514c16ba6494afc1db7434955ffa6">expect</a>);</div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>}</div>
-</div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>} <span class="comment">// end of tast::macro::</span></div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno"><a class="line" href="file-compare_8h.html#aec3198c5ecc7910363e1e39577d0b4f4">   30</a></span><span class="preprocessor">#define COUT_FILE(file, ...) tast::macro::cout_file(SRC_LOCATION, file, ## __VA_ARGS__)</span></div>
