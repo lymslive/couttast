@@ -20,14 +20,18 @@ jobs:
           publish_dir: ./docs/html
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04  # 使用与本地相同的 Ubuntu 版本
     steps:
       - name: checkout
         uses: actions/checkout@v4
+      - name: Setup environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-9 cmake
       - name: build and test
         run: |
           mkdir build
           cd build
-          cmake ..
+          CC=gcc-9 CXX=g++-9 cmake ..
           make
           make test
