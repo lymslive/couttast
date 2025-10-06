@@ -146,6 +146,40 @@ DEF_TAST(duplicate, "may duplicate test name in namespace")
 
 }
 
+DEF_TAST(string_compare, "Test COUT and COUT_PTR difference for const char*")
+{
+    const char* str1 = "hello";
+    const char* str2 = "hello"; 
+    const char* str3 = "world";
+    const char* str4 = new char[6]; // 动态分配，确保不同指针
+    ::strcpy(const_cast<char*>(str4), "hello");
+    
+    DESC("Test COUT behavior - compares string content using strcmp");
+    COUT(str1, str2);      // 相同内容，相同指针 - 应该通过
+    COUT(::strcmp(str1, str4) == 0, true);  // 相同内容，不同指针 - 验证内容相同
+    COUT(::strcmp(str1, str3) == 0, false); // 不同内容 - 验证内容不同
+    
+    DESC("Test COUT_PTR behavior - compares pointer addresses");
+    COUT_PTR(str1, str1);  // 相同指针 - 应该通过
+    COUT_PTR(str1 == str2, true);  // 相同指针（字面量优化） - 验证指针相同
+    COUT_PTR(str1 == str4, false); // 不同指针 - 验证指针不同
+    
+    DESC("Test with string literals");
+    COUT("hello", "hello");        // 相同内容 - 应该通过（比较内容）
+    COUT_PTR("hello" == "hello", true); // 相同指针（字面量优化） - 验证指针相同
+    
+    DESC("Test with null pointers");
+    const char* null1 = NULL;
+    const char* null2 = NULL;
+    COUT(null1 == null2, true);    // 都为空 - 验证都为空
+    COUT(null1 == str1, false);     // 一个为空，一个不为空 - 验证不等
+    COUT_PTR(null1, null2); // 都为空 - 应该通过
+    COUT_PTR(null1 == str1, false);  // 一个为空，一个不为空 - 验证指针不等
+    
+    // 清理动态分配的内存
+    delete[] str4;
+}
+
 #ifdef USE_TINY_MAIN
 #include "tinymain.hpp"
 #endif

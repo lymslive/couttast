@@ -570,6 +570,13 @@ struct CStatement
         return cout(valExpr, valExpect, valExpr == valExpect);
     }
 
+    // Specialization for const char* comparison - use strcmp for string content comparison
+    bool cout(const char* valExpr, const char* valExpect)
+    {
+        bool bPass = (valExpr == valExpect) || (valExpr && valExpect && ::strcmp(valExpr, valExpect) == 0);
+        return cout(valExpr, valExpect, bPass);
+    }
+
     bool cout(double valExpr, double valExpect)
     {
         // compare double a == b as much precision as possible.
@@ -619,6 +626,9 @@ struct CStatement
 
 /// Print the result of `expr`, may compare with `expect` to determine fail or pass.
 #define COUT(expr, ...) tast::CStatement(SRC_LOCATION, #expr).cout((expr), ## __VA_ARGS__)
+
+/// Compare pointer addresses for const char* types instead of string content
+#define COUT_PTR(expr, ...) tast::CStatement(SRC_LOCATION, #expr).cout((const void*)(expr), (const void*)(__VA_ARGS__))
 
 /// Only print the result if fail to compare `expr` with `expect`.
 #define COUTF(expr, expect, ...) tast::CStatement(SRC_LOCATION, #expr, true).cout((expr), (expect), ## __VA_ARGS__)

@@ -201,13 +201,12 @@ COUT(expr);
 COUT(expr, expect); // only addition [OK] or [NO] at the end
 ```
 
-But for C string types, `const char*` or `char*`, the situation is a bit special. The string content is output in case of single parameter, and the output content is the same in case of double parameters, but the pointer value is compared, which is to meet the first principle. Pointers of other types output their hexadecimal address values, and the address values are also compared.
-
-To compare the contents of C strings, as well as  explicitly using `strcmp`, you can also convert one of the arguments to `std::string` in `COUT` to use overloaded operator `==` for C + + strings, such as:
+But for C string types, `const char*` or `char*`, the situation is a bit special. The string content is output in case of single parameter, and the string content is compared (using `strcmp`) in case of double parameters, which is more intuitive for users. To compare pointer addresses, use the newly added `COUT_PTR` macro.
 
 ```cpp
-COUT(expr, std::string(expect));
-COUT(strcmp(expr, expect), 0);
+COUT(str1, str2);        // compare string content
+COUT_PTR(str1, str2);     // compare pointer addresses
+COUT(str1, std::string(expect)); // convert to std::string for comparison
 ```
 
 For floating-point number comparison, the following methods `COUT` are supported:

@@ -244,15 +244,13 @@ COUT(expr, expect); // 仅在输出末尾增加 [OK] 或 [NO] 判断标记
 ```
 
 但对于 C 字符串类型，`const char*` 或 `char*` 时，情况有点特殊。单参数时输出字
-符串内容，双参数时输出内容虽然也相同，但比较的是指针值，这是为了满足原则一。
-其他类型的指针，输出其十六进制地址值，比较的也是地址值。
-
-若要比较 C 字符串的内容，除了显式用 `strcmp` 外，也可在 `COUT` 中将其中一个参
-数转换为 `std::string` ，以便使用 C++ 字符串的 `==` 重载运算符，如：
+符串内容，双参数时比较字符串内容（使用 `strcmp`），这是为了更符合用户直觉。
+若要比较指针地址，可以使用新增的 `COUT_PTR` 宏。
 
 ```cpp
-COUT(expr, std::string(expect));
-COUT(strcmp(expr, expect), 0);
+COUT(str1, str2);        // 比较字符串内容
+COUT_PTR(str1, str2);     // 比较指针地址
+COUT(str1, std::string(expect)); // 转为 std::string 比较
 ```
 
 对于浮点数比较，支持如下几种方法使用 `COUT` ：
