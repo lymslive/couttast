@@ -15,71 +15,73 @@
 #include <map>
 #include <set>
 
-template <typename valueT, typename valueU>
-std::ostream& operator<<(std::ostream& os, const std::pair<valueT, valueU>& item)
-{
-    os << "(" << item.first << "," << item.second << ")";
-    return os;
-}
-
-template <typename valueT>
-std::ostream& operator<<(std::ostream& os, const std::vector<valueT>& vec)
-{
-    os << "[";
-
-    bool first = true;
-    for (auto& item : vec)
+namespace std {
+    template <typename valueT, typename valueU>
+    std::ostream& operator<<(std::ostream& os, const std::pair<valueT, valueU>& item)
     {
-        if (!first)
-        {
-            os << ",";
-        }
-        os << item;
-        first = false;
+        os << "(" << item.first << "," << item.second << ")";
+        return os;
     }
 
-    os << "]";
-    return os;
-}
-
-template <typename keyT, typename valueT>
-std::ostream& operator<<(std::ostream& os, const std::map<keyT, valueT>& map)
-{
-    os << "{";
-
-    bool first = true;
-    for (auto& item : map)
+    template <typename valueT>
+    std::ostream& operator<<(std::ostream& os, const std::vector<valueT>& vec)
     {
-        if (!first)
+        os << "[";
+
+        bool first = true;
+        for (auto& item : vec)
         {
-            os << ",";
+            if (!first)
+            {
+                os << ",";
+            }
+            os << item;
+            first = false;
         }
-        os << item.first << ":" << item.second;
-        first = false;
+
+        os << "]";
+        return os;
     }
 
-    os << "}";
-    return os;
-}
-
-template <typename keyT>
-std::ostream& operator<<(std::ostream& os, const std::set<keyT>& set)
-{
-    os << "{";
-
-    bool first = true;
-    for (auto& item : set)
+    template <typename keyT, typename valueT>
+    std::ostream& operator<<(std::ostream& os, const std::map<keyT, valueT>& map)
     {
-        if (!first)
+        os << "{";
+
+        bool first = true;
+        for (auto& item : map)
         {
-            os << ",";
+            if (!first)
+            {
+                os << ",";
+            }
+            os << item.first << ":" << item.second;
+            first = false;
         }
-        os << item;
-        first = false;
+
+        os << "}";
+        return os;
     }
 
-    os << "}";
-    return os;
+    template <typename keyT>
+    std::ostream& operator<<(std::ostream& os, const std::set<keyT>& set)
+    {
+        os << "{";
+
+        bool first = true;
+        for (auto& item : set)
+        {
+            if (!first)
+            {
+                os << ",";
+            }
+            os << item;
+            first = false;
+        }
+
+        os << "}";
+        return os;
+    }
 }
 
 #endif /* end of include guard: COUTSTD_HPP__ */
