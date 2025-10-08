@@ -1,14 +1,5 @@
 #include "format.h"
-#include "coutstd.hpp"
-
-// operator<< overload for tast::CTinyCli
-inline std::ostream& operator<<(std::ostream& os, const tast::CTinyCli& cli)
-{
-    os << "...\n";
-    os << "option: " << cli.m_mapOption << "\n";
-    os << "argument: " << cli.m_vecArg;
-    return os;
-}
+#include "test-tinyini.hpp"
 
 // Parse a string as cli argument simply seprated by space, may modify it in place.
 void ParseCli(tast::CTinyCli& cli, std::string& line)

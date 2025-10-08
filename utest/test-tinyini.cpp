@@ -1,18 +1,6 @@
 #include "couttast.h"
-#include "tinyini.h"
+#include "test-tinyini.hpp"
 #include "tastargv.hpp"
-#include "coutstd.hpp"
-
-/// operator<< overload for tast::CTinyCli in global namesapce.
-std::ostream& operator<<(std::ostream& os, const tast::CTinyCli& cli);
-
-std::ostream& operator<<(std::ostream& os, const tast::CTinyCli& cli)
-{
-    os << "...\n";
-    os << "option: " << cli.m_mapOption << "\n";
-    os << "argument: " << cli.m_vecArg;
-    return os;
-}
 
 DEF_TAST(tinyini_line, "test parse from lines")
 {
