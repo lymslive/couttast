@@ -32,6 +32,12 @@ add_library(couttast STATIC
     #src/tinytast.cpp
 )
 
+# fix different include layout between install and source
+target_include_directories(couttast PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
 # A simple program to run dynamic library compileed from client unittest.
 add_executable(tast_drive src/tast_drive.cpp)
 target_link_libraries(tast_drive
@@ -116,7 +122,8 @@ set(COUTTAST_HEADER
 
 # package config
 include(CMakePackageConfigHelpers)
-configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/couttastConfig.cmake"
     INSTALL_DESTINATION "lib/cmake/couttast"
 #   NO_SET_AND_CHECK_MACRO
