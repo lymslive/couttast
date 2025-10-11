@@ -34,7 +34,7 @@ add_library(couttast STATIC
 
 # fix different include layout between install and source
 target_include_directories(couttast PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include_install>
     $<INSTALL_INTERFACE:include>
 )
 
