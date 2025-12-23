@@ -168,6 +168,3 @@ DEF_TAST(verification_fail, "测试验证失败时返回NaN的情况")
     DESC("验证失败测试完成");
 }
 
-#ifdef USE_TINY_MAIN
-#include "tinymain.hpp"
-#endif
