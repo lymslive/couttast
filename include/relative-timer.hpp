@@ -1,0 +1,221 @@
+/**
+ * @file relative-timer.hpp
+ * @author lymslive
+ * @date 2025-12-23
+ * @brief Relative performance timer.
+ * */
+#pragma once
+#ifndef PERF_RELATIVE_TIMER_HPP_
+#define PERF_RELATIVE_TIMER_HPP_
+
+#include "tastargv.hpp"
+
+#include <chrono>
+#include <cmath>
+#include <iostream>
+#include <limits>
+#include <string>
+#include <random>
+
+namespace tast
+{
+
+/**
+ * @brief Virtual polymorphic base class for relative performance testing.
+ *
+ * This class provides a framework for comparing the performance of two methods
+ * (methodA and methodB) in derived classes. 
+ *
+ * Derived classes should override the pure virtual methods methodA and methodB,
+ * and optionally methodVerify for functional correctness checking.
+ */
+class RelativeTimer
+{
+  public:
+    //=== Descriptive name members ===
+    std::string name;    //< Test scenario description
+    std::string labelA;  //< Description for method A
+    std::string labelB;  // Description for method B
+
+    //=== Runtime control members ===
+    //would read from command line with prefix `--timer-`.
+    int loop = 1000;     //< Total number of iterations for each method
+    int batch = 10;      //< Number of batches to divide the loops into
+    int size = 100;      //< Size parameter for test data
+    int seed = 0;        //< Random seed for reproducible tests
+
+    //=== Runtime result members ===
+    double timeA = 0.0;  //< Total execution time for methodA (milliseconds)
+    double timeB = 0.0;  //< Total execution time for methodB (milliseconds)
+    double ratio = 0.0;  //< Performance ratio (timeA/timeB)
+
+    /**
+     * @brief Constructor that reads command line parameters
+     *
+     * Initializes configuration parameters from command line with unified
+     * prefixes (timer-*). Derived classes can override these values before
+     * calling run() if needed.
+     */
+    RelativeTimer()
+    {
+        // Bind command line arguments with unified prefix
+        BIND_ARGV(loop, "timer-loop");
+        BIND_ARGV(batch, "timer-batch");
+        BIND_ARGV(size, "timer-size");
+        BIND_ARGV(seed, "timer-seed");
+    }
+
+    //=== Pure virtual methods for derived classes ===
+    
+    /**
+     * @brief First method to compare (must be implemented by derived class)
+     */
+    virtual void methodA() = 0;
+
+    /**
+     * @brief Second method to compare (must be implemented by derived class)
+     */
+    virtual void methodB() = 0;
+
+    /**
+     * @brief Verification method for functional correctness
+     *
+     * This method should be overridden by derived classes to verify that
+     * methodA and methodB produce equivalent results. The default
+     * implementation returns true (no verification).
+     *
+     * @return bool True if methods are functionally equivalent, false otherwise
+     */
+    virtual bool methodVerify() { return true; }
+
+    //=== Public interface methods ===
+
+    /**
+     * @brief Run relative performance test with verification
+     *
+     * Executes methodA and methodB alternately in batches for the configured
+     * number of loops. Stores results in member variables (timeA, timeB, ratio).
+     * Includes a verification phase to ensure functional correctness before
+     * performance measurement.
+     *
+     * @return double Performance ratio (timeA/timeB). Returns NaN if verification fails
+     */
+    double run()
+    {
+        // Handle special values for safety
+        if (batch <= 0) batch = 1;
+        if (loop <= 0) loop = 1;
+
+        int inner_loop = loop / batch;
+        if (inner_loop <= 0) inner_loop = 1;
+
+        // Verification phase - check functional correctness before performance testing
+        if (!methodVerify())
+        {
+            // Return NaN to indicate verification failure
+            timeA = 0.0;
+            timeB = 0.0;
+            ratio = std::numeric_limits<double>::quiet_NaN();
+            return ratio;
+        }
+
+        // Warm up
+        methodA();
+        methodB();
+
+        // Time accumulation
+        timeA = 0.0;
+        timeB = 0.0;
+
+        // Run in alternating batches
+        for (int i = 0; i < batch; ++i)
+        {
+            // Time methodA
+            auto startA = std::chrono::high_resolution_clock::now();
+            for (int j = 0; j < inner_loop; ++j)
+            {
+                methodA();
+            }
+            auto endA = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsedA = endA - startA;
+            timeA += elapsedA.count();
+
+            // Time methodB
+            auto startB = std::chrono::high_resolution_clock::now();
+            for (int j = 0; j < inner_loop; ++j)
+            {
+                methodB();
+            }
+            auto endB = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsedB = endB - startB;
+            timeB += elapsedB.count();
+        }
+
+        // Convert to milliseconds
+        timeA *= 1000.0;
+        timeB *= 1000.0;
+
+        // Calculate ratio
+        if (timeB == 0.0)
+        {
+            // Avoid division by zero
+            ratio = (timeA == 0.0) ? 1.0 : 1000.0; // Large value indicating A is much slower
+        }
+        else
+        {
+            ratio = timeA / timeB;
+        }
+
+        return ratio;
+    }
+
+    /**
+     * @brief Run performance test and print results
+     *
+     * Executes the performance test and prints detailed results including
+     * timing information and performance comparison analysis.
+     *
+     * @return double Performance ratio (timeA/timeB)
+     */
+    double runAndPrint()
+    {
+        double result_ratio = run();
+
+        // Set default names if not provided
+        if (name.empty()) name = "Relative Performance Test";
+        if (labelA.empty()) labelA = "Method A";
+        if (labelB.empty()) labelB = "Method B";
+
+        std::cout << "=== " << name << " ===" << std::endl;
+        std::cout << "Loops: " << loop << ", Batches: " << batch 
+                  << ", Size: " << size << ", Seed: " << seed << std::endl;
+        std::cout << "Performance ratio (" << labelA << "/" << labelB << ") " 
+                  << timeA << " ms / " << timeB << " ms = " << ratio << std::endl;
+
+        if (ratio < 0.95)
+        {
+            std::cout << labelA << " is " << (1.0 / ratio - 1.0) * 100 
+                      << "% faster" << std::endl;
+        }
+        else if (ratio > 1.05)
+        {
+            std::cout << labelB << " is " << (ratio - 1.0) * 100 
+                      << "% faster" << std::endl;
+        }
+        else
+        {
+            std::cout << "Performance is approximately equal" << std::endl;
+        }
+
+        return result_ratio;
+    }
+
+    /**
+     * @brief Virtual destructor for proper cleanup
+     */
+    virtual ~RelativeTimer() = default;
+};
+
+} // namespace tast
+
+#endif // PERF_RELATIVE_TIMER_HPP_
