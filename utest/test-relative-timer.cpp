@@ -76,20 +76,30 @@ public:
     // 方法A：插入排序
     virtual void methodA() override
     {
-        insertionSort(dataA);
+        // 复制临时数组进行排序，避免原位排序影响后续循环
+        std::vector<int> tempA = dataA;
+        insertionSort(tempA);
     }
     
     // 方法B：冒泡排序
     virtual void methodB() override
     {
-        bubbleSort(dataB);
+        // 复制临时数组进行排序，避免原位排序影响后续循环
+        std::vector<int> tempB = dataB;
+        bubbleSort(tempB);
     }
     
     // 验证功能正确性
     virtual bool methodVerify() override
     {
-        // 排序后数组相等
-        return dataA == dataB;
+        // 复制临时数组进行排序，然后检查是否有序且相等
+        std::vector<int> tempA = dataA;
+        std::vector<int> tempB = dataB;
+        insertionSort(tempA);
+        bubbleSort(tempB);
+        
+        // 检查排序后数组是否相等
+        return tempA == tempB;
     }
 };
 
@@ -132,20 +142,30 @@ public:
     // 方法A：快速排序
     virtual void methodA() override
     {
-        std::sort(dataA.begin(), dataA.end());
+        // 复制临时数组进行排序，避免原位排序影响后续循环
+        std::vector<int> tempA = dataA;
+        std::sort(tempA.begin(), tempA.end());
     }
     
     // 方法B：冒泡排序
     virtual void methodB() override
     {
-        bubbleSort(dataB);
+        // 复制临时数组进行排序，避免原位排序影响后续循环
+        std::vector<int> tempB = dataB;
+        bubbleSort(tempB);
     }
     
     // 验证功能正确性
     virtual bool methodVerify() override
     {
-        // 排序后数组相等
-        return dataA == dataB;
+        // 复制临时数组进行排序，然后检查是否有序且相等
+        std::vector<int> tempA = dataA;
+        std::vector<int> tempB = dataB;
+        std::sort(tempA.begin(), tempA.end());
+        bubbleSort(tempB);
+        
+        // 检查排序后数组是否相等
+        return tempA == tempB;
     }
 };
 
@@ -201,6 +221,9 @@ DEF_TOOL(sort_performance, "测试插入排序与冒泡排序的性能比较")
     
     DESC("使用 COUT_TIMER 宏运行性能测试并验证结果");
     COUT_TIMER(test);
+
+    // 断言插入排序比冒泡快
+    COUT_TIMER(test, 1.0);
 }
 
 // 使用 DEF_TAST 创建异常用例入口
@@ -220,14 +243,10 @@ DEF_TOOL(qsort_perf, "快速排序性能测试（小规模数据）")
 {
     DESC("创建快速排序性能测试实例（不同规模数据）");
     QuickSortPerformanceTest s2(100, 100);
-//  COUT(s2.dataA);
-//  COUT(s2.dataB);
-    COUT_TIMER(s2);
-//  COUT(s2.dataA);
-//  COUT(s2.dataB);
+    COUT_TIMER(s2, 0.9);
     
     QuickSortPerformanceTest s3(1000, 100);
-    COUT_TIMER(s3);
+    COUT_TIMER(s3, 0.5);
     
     // 根据命令行参数测试
     QuickSortPerformanceTest s0(0, 0);
