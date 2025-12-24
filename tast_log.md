@@ -75,3 +75,47 @@
   - 添加必要的头文件包含（`<thread>` for `std::this_thread::sleep_for`）
   - 使用项目标准的测试宏和框架结构
 
+## 2025-12-24 为 RelativeTimer 设计 COUT 扩展宏
+
+本 couttast 库的特色宏是 COUT ，有两种含义：
+- 单参数 COUT(expr) 打印 expr 的值，由人工观察判断其输出合理与否
+- 双参数 COUT(expr, expect)，虽也会打印 expr 值，但主要目的是与 expect 比较，
+  断言它们相等，可用于自动测试与回归测试。
+
+include/relative-tiemr.hpp 的 RelativeTimer 基类用于相对性能测试，也希望能集成
+这种宏用法。但是扩展功能又不想直接修改 tinytast.hpp 的基本功能，所以设计为扩展
+宏 COUT_TIMER ，按类似思想表达两种含义：
+- 单参数 COUT_TIMER(timer), 调用 timer.runAndPrint() 方法，打印相对性能测试情
+  况，再用普通 COUT 宏断言其返回值非 nan。
+- 双参数 COUT_TIMER(timer, max_ratio)，调用 timer.run() 方法，用普通 COUT 宏断
+  言其返回值非 nan 且小于第二参数 max_ratio 。当第二参数是 1.0 时，相当于断言
+  timer 的方法 A 比方法 B 快；当参数大于 1.0 时，表示允许方法 A 慢一点，太不能
+  慢太多。
+
+可以参数 file-compare.h 文件的 COUT_FILE 宏的扩展方法。在 tast::macro 命名空间
+中封装一个函数，实现上述 COUT_TIMER 的功能。但不要拆分到 .cpp 文件中，就仍在
+relative-timer.hpp 内实现。注意在实现中也不是直接普通 COUT 宏比较断言，而是调
+用它所对应的 tast::CStatement 的 cout 方法。
+
+然后将新扩展的 COUT_TIMER 应用到 utest/test-relative-tiemr.cpp 已有的两个测试
+用例中，使用单参数宏再测试一次。
+
+在 sort_performance 用例中使用 COUT_TIMER(test) 的话，除了 runAndPrint() 原有
+的输出，再额外输出一行如行：
+test =~ {ratio实际值}
+
+在 verification_fail 用例中使用 COUT_TIMER(test) 额外输出一行：
+test =~ nan
+
+然后再增加一性能测试用例，类似 SortPerformanceTest ，但是方法 A 改用标准库的
+快速排序算法。因为之前这个用例，插入与冒泡排序理论上性能相近，不方便断言谁快。
+但快排在数据规模大时总该比冒泡快。因此这个用例的所依的派生类构造函数应该接收
+size 参数与 loop 参数，在用例中测试不同数据规模的排序比较。在 size 较小是用
+COUT_TIMER 单参数观察详细输出，在较大时用 COUT_TIMER 双参数，第二参数传 1.0 或
+0.9 ，观察这样的测试是否如期通过。也能侧面反映 RelativeTimer 的性能测试框架是
+否符号已知理论结果。
+
+### 完成结果备注
+AI 完成效果不太好，手动修改了。
+但奇怪的是，快排比冒泡慢，在 1000，10000 个整数数组排序时都冒泡快。
+更从数据排序在本地开发本跑就太慢了。

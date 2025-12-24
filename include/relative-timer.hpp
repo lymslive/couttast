@@ -8,6 +8,7 @@
 #ifndef PERF_RELATIVE_TIMER_HPP_
 #define PERF_RELATIVE_TIMER_HPP_
 
+#include "tinytast.hpp"
 #include "tastargv.hpp"
 
 #include <chrono>
@@ -217,5 +218,46 @@ class RelativeTimer
 };
 
 } // namespace tast
+
+//===================================================================
+// COUT_TIMER Macro Extension
+//===================================================================
+
+namespace tast
+{
+namespace macro
+{
+
+/// @brief Implement single parameter COUT_TIMER(timer)
+/// Calls timer.runAndPrint() method, then asserts return value is not NaN
+inline bool cout_timer(const tast::CLocation& location, const char* expr, tast::RelativeTimer& timer)
+{
+    double ratio = timer.runAndPrint();
+    bool pass = !std::isnan(ratio);
+    // expr =~? cout(valExpr, valExpect, bPass)
+    return tast::CStatement(location, expr).cout(ratio, "not nan", pass);
+}
+
+/// @brief Implement dual parameter COUT_TIMER(timer, max_ratio)
+/// Calls timer.run() method, then asserts return value is not NaN and less than max_ratio
+inline bool cout_timer(const tast::CLocation& location, const char* expr, tast::RelativeTimer& timer, double max_ratio)
+{
+    double ratio = timer.run();
+    bool pass = !std::isnan(ratio);
+    if (pass)
+    {
+        pass = ratio < max_ratio;
+    }
+    // expr =~? cout(valExpr, valExpect, bPass)
+    return tast::CStatement(location, expr).cout(ratio, max_ratio, pass);
+}
+
+} // namespace macro
+} // namespace tast
+
+/// @brief COUT_TIMER Macro Definition
+/// Single parameter version: COUT_TIMER(timer) - Print detailed results and assert return value is not NaN
+/// Dual parameter version: COUT_TIMER(timer, max_ratio) - Assert return value is not NaN and less than max_ratio
+#define COUT_TIMER(timer, ...) tast::macro::cout_timer(SRC_LOCATION, #timer, timer, ## __VA_ARGS__)
 
 #endif // PERF_RELATIVE_TIMER_HPP_

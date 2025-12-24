@@ -1,4 +1,6 @@
 #include "tinytast.hpp"
+#include "extra-macros.hpp"
+#include "coutstd.hpp"
 #include "relative-timer.hpp"
 #include <algorithm>
 #include <cmath>
@@ -43,7 +45,7 @@ void bubbleSort(std::vector<int>& data)
 // 正常用例：从 RelativeTimer 派生的排序性能比较测试
 class SortPerformanceTest : public tast::RelativeTimer
 {
-private:
+public:
     std::vector<int> dataA;
     std::vector<int> dataB;
 
@@ -75,6 +77,62 @@ public:
     virtual void methodA() override
     {
         insertionSort(dataA);
+    }
+    
+    // 方法B：冒泡排序
+    virtual void methodB() override
+    {
+        bubbleSort(dataB);
+    }
+    
+    // 验证功能正确性
+    virtual bool methodVerify() override
+    {
+        // 排序后数组相等
+        return dataA == dataB;
+    }
+};
+
+// 快速排序性能测试：从 RelativeTimer 派生的排序性能比较测试
+class QuickSortPerformanceTest : public tast::RelativeTimer
+{
+public:
+    std::vector<int> dataA;
+    std::vector<int> dataB;
+
+public:
+    // 构造函数接收 size 和 loop 参数
+    QuickSortPerformanceTest(int testSize, int testLoop)
+    {
+        // 设置测试参数
+        if (testSize > 0) size = testSize;
+        if (testLoop > 0) loop = testLoop;
+        
+        // 设置测试描述
+        name = "快速排序与冒泡排序性能比较测试";
+        labelA = "快速排序";
+        labelB = "冒泡排序";
+        
+        // 随机生成测试数据
+        std::random_device rd;
+        std::mt19937 gen(seed != 0 ? seed : rd());
+        std::uniform_int_distribution<> dis(1, 1000);
+        
+        dataA.resize(size);
+        dataB.resize(size);
+        
+        for (int i = 0; i < size; ++i)
+        {
+            int value = dis(gen);
+            dataA[i] = value;
+            dataB[i] = value;  // 确保两个方法使用相同的测试数据
+        }
+    }
+    
+    // 方法A：快速排序
+    virtual void methodA() override
+    {
+        std::sort(dataA.begin(), dataA.end());
     }
     
     // 方法B：冒泡排序
@@ -141,16 +199,8 @@ DEF_TOOL(sort_performance, "测试插入排序与冒泡排序的性能比较")
     DESC("创建排序性能测试实例");
     SortPerformanceTest test;
     
-    DESC("运行性能测试并打印结果");
-    double ratio = test.runAndPrint();
-    
-    DESC("验证结果：返回值应该是有效数字（非NaN）");
-    COUT(std::isnan(ratio), false);
-    
-    DESC("验证结果：性能比值应该在合理范围内");
-    COUT(ratio >= 0.5 && ratio <= 2.0, true);
-    
-    DESC("排序性能测试完成");
+    DESC("使用 COUT_TIMER 宏运行性能测试并验证结果");
+    COUT_TIMER(test);
 }
 
 // 使用 DEF_TAST 创建异常用例入口
@@ -159,12 +209,28 @@ DEF_TAST(verification_fail, "测试验证失败时返回NaN的情况")
     DESC("创建验证失败测试实例");
     VerificationFailTest test;
     
-    DESC("运行验证失败测试");
-    double ratio = test.runAndPrint();
+    DESC("使用 COUT_TIMER 宏运行验证失败测试并验证结果");
+    COUT_TIMER(test);
+
+    COUT_ERROR(1); // 断言确实有个错误
+}
+
+// 快速排序性能测试用例（小规模数据）
+DEF_TOOL(qsort_perf, "快速排序性能测试（小规模数据）")
+{
+    DESC("创建快速排序性能测试实例（不同规模数据）");
+    QuickSortPerformanceTest s2(100, 100);
+//  COUT(s2.dataA);
+//  COUT(s2.dataB);
+    COUT_TIMER(s2);
+//  COUT(s2.dataA);
+//  COUT(s2.dataB);
     
-    DESC("验证结果：当验证失败时应该返回NaN");
-    COUT(std::isnan(ratio), true);
+    QuickSortPerformanceTest s3(1000, 100);
+    COUT_TIMER(s3);
     
-    DESC("验证失败测试完成");
+    // 根据命令行参数测试
+    QuickSortPerformanceTest s0(0, 0);
+    COUT_TIMER(s0);
 }
 
