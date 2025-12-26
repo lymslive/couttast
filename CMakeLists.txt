@@ -52,6 +52,7 @@ add_executable(utCoutTast
     utest/test-filter.cpp
     utest/test-format.cpp
     utest/test-parallel.cpp
+    utest/test-relative-timer.cpp
     utest/test-tinyini.cpp
     utest/test-tinytast.cpp
     utest/test-file-compare.cpp
