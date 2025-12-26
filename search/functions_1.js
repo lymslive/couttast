@@ -8,6 +8,7 @@ var searchData=
   ['configtip_5',['ConfigTip',['../structtast_1_1CTastAgent.html#a44f38535603f6832b92ebc2bf501ede7',1,'tast::CTastAgent']]],
   ['cout_5ffile_6',['cout_file',['../namespacetast_1_1macro.html#a8c91d93c53a9e975b0eda0dea3227638',1,'tast::macro::cout_file(const tast::CLocation &amp;location, const std::string &amp;file)'],['../namespacetast_1_1macro.html#ab3a19bc5f112d34f1d5a28685ec27b7c',1,'tast::macro::cout_file(const tast::CLocation &amp;location, const std::string &amp;file, const std::string &amp;expect)']]],
   ['cout_5fsystem_7',['cout_system',['../namespacetast_1_1macro.html#ad386058f6faa47c3f998ee938209dbc4',1,'tast::macro']]],
-  ['ctestreader_8',['CTestReader',['../classtast_1_1xml_1_1CTestReader.html#af681b190a25a43683d9c772cc0074ded',1,'tast::xml::CTestReader']]],
-  ['ctestwriter_9',['CTestWriter',['../classtast_1_1xml_1_1CTestWriter.html#ace17c67ca9526fd11123b79d424224d5',1,'tast::xml::CTestWriter']]]
+  ['cout_5ftimer_8',['cout_timer',['../namespacetast_1_1macro.html#ab0d8ebd7ca1f611fe6db86728534122c',1,'tast::macro::cout_timer(const tast::CLocation &amp;location, const char *expr, tast::RelativeTimer &amp;timer)'],['../namespacetast_1_1macro.html#aff04490322ce4c4020fa01387c511383',1,'tast::macro::cout_timer(const tast::CLocation &amp;location, const char *expr, tast::RelativeTimer &amp;timer, double max_ratio)']]],
+  ['ctestreader_9',['CTestReader',['../classtast_1_1xml_1_1CTestReader.html#af681b190a25a43683d9c772cc0074ded',1,'tast::xml::CTestReader']]],
+  ['ctestwriter_10',['CTestWriter',['../classtast_1_1xml_1_1CTestWriter.html#ace17c67ca9526fd11123b79d424224d5',1,'tast::xml::CTestWriter']]]
 ];
