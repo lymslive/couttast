@@ -187,25 +187,25 @@ class RelativeTimer
         if (labelA.empty()) labelA = "Method A";
         if (labelB.empty()) labelB = "Method B";
 
-        std::cout << "=== " << name << " ===" << std::endl;
-        std::cout << "Loops: " << loop << ", Batches: " << batch 
-                  << ", Size: " << size << ", Seed: " << seed << std::endl;
-        std::cout << "Performance ratio (" << labelA << "/" << labelB << ") " 
-                  << timeA << " ms / " << timeB << " ms = " << ratio << std::endl;
+        DESC("=== %s ===", name.c_str());
+        DESC("Loops: %d, Batches: %d, Size: %d, Seed: %d", loop, batch, size, seed);
+        DESC("Performance ratio (%s/%s) %g ms / %g ms = %g", labelA.c_str(), labelB.c_str(), timeA, timeB, ratio);
 
-        if (ratio < 0.95)
+        if (std::isnan(ratio))
         {
-            std::cout << labelA << " is " << (1.0 / ratio - 1.0) * 100 
-                      << "% faster" << std::endl;
+            DESC("Performance test failed: verification returned false");
+        }
+        else if (ratio < 0.95)
+        {
+            DESC("%s is %g%% faster", labelA.c_str(), (1.0 / ratio - 1.0) * 100);
         }
         else if (ratio > 1.05)
         {
-            std::cout << labelB << " is " << (ratio - 1.0) * 100 
-                      << "% faster" << std::endl;
+            DESC("%s is %g%% faster", labelB.c_str(), (ratio - 1.0) * 100);
         }
         else
         {
-            std::cout << "Performance is approximately equal" << std::endl;
+            DESC("Performance is approximately equal");
         }
 
         return result_ratio;

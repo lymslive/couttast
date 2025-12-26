@@ -121,3 +121,25 @@ AI 完成效果不太好，手动修改了。
 
 找到了愚蠢的原因，原代码直接对 dataA 和 dataB 进行原位排序，第一次循环后数组变
 为有序状态，所以冒泡快。改为每次复制临时数组再排序就正常了，符合理论预期。
+
+## 2025-12-26: 修改 RelativeTimer runAndPrint 方法使用 DESC 宏
+
+### 用户原始需求
+将 include/relative-timer.hpp 中 RelativeTimer::runAndPrint 方法的 std::cout 打印信息改为使用本库的 DESC 宏，类似 printf 语法。注意 printf 能否处理特殊浮点数 nan。
+
+另外修复一个小 bug，当 ratio 是 nan 时，会打印 "Performance is approximately equal" 这是不合理的。
+
+使用 ./utCoutTast --all utest/test-relative-timer.cpp 测试命令检查结果。
+
+### AI 完成情况汇报 (minimax-m2)
+- **核心修改**：成功将 runAndPrint 方法中的所有 std::cout 替换为 DESC 宏，使用 printf 语法格式
+- **格式处理**：使用 %s、%d、%g 格式符处理字符串、整数和浮点数（包括 nan 等特殊值）
+- **Bug 修复**：
+  - 添加 std::isnan(ratio) 检查，正确处理 ratio 为 nan 的情况
+  - 当 ratio 是 nan 时显示 "Performance test failed: verification returned false"
+  - 只有当 ratio 不是 nan 且在 [0.95, 1.05] 范围内时才显示 "Performance is approximately equal"
+- **测试验证**：
+  - sort_performance 测试正常输出 DESC 信息，显示格式化的性能比较结果
+  - verification_fail 测试正确处理 ratio 为 nan 的情况，输出验证失败信息
+  - 重新编译项目并运行测试，所有用例通过，符合预期行为
+- **功能确认**：DESC 宏现在可以通过命令行参数（如 --cout）控制是否输出，完全替代了原来的 std::cout 输出
