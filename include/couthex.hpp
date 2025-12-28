@@ -17,31 +17,31 @@ namespace macro
 {
 
 inline
-bool cout_hex(const tast::SLocation& location, const char* expr, const std::string& str)
+bool cout_hex(const tast::CLocation& location, const char* expr, const std::string& str)
 {
     std::string output = utd::strhex(str.c_str(), str.size());
-    return tast::CStatement(location, expr).cout(_TASTMGR, output);
+    return tast::CStatement(location, expr).cout(output);
 }
 
 inline
-bool cout_hex(const tast::SLocation& location, const char* expr, const std::string& str, const std::string& expect)
+bool cout_hex(const tast::CLocation& location, const char* expr, const std::string& str, const std::string& expect)
 {
     std::string output = utd::strhex(str.c_str(), str.size());
-    return tast::CStatement(location, expr).cout(_TASTMGR, output, expect);
+    return tast::CStatement(location, expr).cout(output, expect);
 }
 
 template <typename T>
-bool cout_hex(const tast::SLocation& location, const char* expr, const T& val)
+bool cout_hex(const tast::CLocation& location, const char* expr, const T& val)
 {
     std::string output = utd::strhex(val);
-    return tast::CStatement(location, expr).cout(_TASTMGR, output);
+    return tast::CStatement(location, expr).cout(output);
 }
 
 template <typename T>
-bool cout_hex(const tast::SLocation& location, const char* expr, const T& val, const std::string& expect)
+bool cout_hex(const tast::CLocation& location, const char* expr, const T& val, const std::string& expect)
 {
     std::string output = utd::strhex(val);
-    return tast::CStatement(location, expr).cout(_TASTMGR, output, expect);
+    return tast::CStatement(location, expr).cout(output, expect);
 }
 
 } /* macro */ 

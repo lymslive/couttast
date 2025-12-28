@@ -98,7 +98,7 @@ if(BUILD_EXAMPLE)
     add_subdirectory(example)
 endif()
 
-# Only install this necessary header files to include/couttast
+# Only install these necessary header files to include/couttast
 set(COUTTAST_HEADER
     include/tinytast.hpp
     include/couttast.hpp
@@ -112,6 +112,7 @@ set(COUTTAST_HEADER
     include/tinymain.hpp
     include/coutdebug.hpp
     include/logprint.hpp
+    include/couthex.hpp
     include/private-access.hpp
     include/couttast.h
     include/tinyini.h
