@@ -143,3 +143,14 @@ AI 完成效果不太好，手动修改了。
   - verification_fail 测试正确处理 ratio 为 nan 的情况，输出验证失败信息
   - 重新编译项目并运行测试，所有用例通过，符合预期行为
 - **功能确认**：DESC 宏现在可以通过命令行参数（如 --cout）控制是否输出，完全替代了原来的 std::cout 输出
+
+## 2026-01-12: cmake 构建脚本增加 COUTTAST_LIB_ONLY 选项
+
+修改根目录的 CMakeLists.txt ，增加 `COUTTAST_LIB_ONLY` 选项，默认 False 。
+当被设置时，不编译单元测试与 example。
+这使外部项目集成 couttast 时可跳过不必要的编译。
+
+### AI 完成情况汇报 (minimax-m2)
+
+通过设置 EXCLUDE_FROM_ALL 达成目的，排除 tast_drive utCoutTast utCxx98Tast.
+

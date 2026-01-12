@@ -98,6 +98,15 @@ if(BUILD_EXAMPLE)
     add_subdirectory(example)
 endif()
 
+# Option to build library only, skip tests and examples (for external project integration)
+option(COUTTAST_LIB_ONLY "only build library, skip tests and examples" OFF)
+
+if(NOT COUTTAST_LIB_ONLY)
+    set_target_properties(tast_drive utCoutTast utCxx98Tast PROPERTIES EXCLUDE_FROM_ALL FALSE)
+else()
+    set_target_properties(tast_drive utCoutTast utCxx98Tast PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
+
 # Only install these necessary header files to include/couttast
 set(COUTTAST_HEADER
     include/tinytast.hpp
@@ -156,9 +165,11 @@ install(TARGETS couttast
     DESTINATION "lib"
 )
 
-install(TARGETS tast_drive
-    DESTINATION "bin"
-)
+if(NOT COUTTAST_LIB_ONLY)
+    install(TARGETS tast_drive
+        DESTINATION "bin"
+    )
+endif()
 
 install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/couttastConfig.cmake
